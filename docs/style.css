@@ -465,6 +465,65 @@ footer a {
   margin: 0 0.5rem;
 }
 
+.manual-download {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.manual-icon-link {
+  display: block;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.manual-icon-link img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.15s ease, outline-color 0.15s ease;
+}
+
+.manual-icon-link:hover img,
+.manual-icon-link:focus-visible img {
+  transform: scale(1.04);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.manual-hint {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.share-row .share-btn {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  font: inherit;
+}
+
+.share-status {
+  min-height: 1.25rem;
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
 @media (max-width: 600px) {
   .nav-links {
     font-size: 0.85rem;

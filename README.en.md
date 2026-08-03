@@ -8,7 +8,7 @@ Inspired by Corrado Guzzanti’s «Quelo» character and derived from **Quelo Of
 
 **Release:** **[0.08-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha)**  
 **Full ISO (mirror):** [https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso)  
-**Changelog:** [`CHANGELOG.md`](CHANGELOG.md)
+**Changelog:** [`CHANGELOG.md`](CHANGELOG.md) · **Site:** [Pages](https://alby-quelo.github.io/Quelo-Audiomaker/en/)
 
 
 ## Highlights
