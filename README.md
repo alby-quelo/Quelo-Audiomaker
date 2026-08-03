@@ -8,7 +8,8 @@ Ispirata al personaggio «Quelo» di Corrado Guzzanti e derivata dal progetto **
 
 **Release:** **[0.08-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha)**  
 **ISO intera (mirror):** [https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso)  
-**Changelog:** [`CHANGELOG.md`](CHANGELOG.md) · **Sito:** [Pages](https://alby-quelo.github.io/Quelo-Audiomaker/)
+**Sito web:** [https://alby-quelo.github.io/Quelo-Audiomaker/](https://alby-quelo.github.io/Quelo-Audiomaker/)  
+**Changelog:** [`CHANGELOG.md`](CHANGELOG.md)
 
 
 ## In evidenza
