@@ -1,0 +1,287 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Conferma disco di installazione e destinazione GRUB."""
+
+from __future__ import annotations
+
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+from PyQt6.QtCore import QSize, Qt, QTimer
+from PyQt6.QtGui import QFont, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+CHOICES_PATH = Path("/etc/quelo-install-choices.yaml")
+CHOICES_CALAMARES = Path("/etc/calamares/quelo-install-choices.yaml")
+LOGO_CANDIDATES = [
+    Path("/etc/calamares/branding/quelo/logo.png"),
+    Path("/usr/share/quelo-audiomaker/logo.png"),
+]
+
+# Niente padding CSS. Altezza fissa da fontMetrics: il layout non puo' schiacciare i glifi.
+_DESC_PAD = 8
+
+
+class _DescLabel(QLabel):
+    """Nota descrittiva: word-wrap con altezza fissa calcolata (leggibile)."""
+
+    def __init__(self, text: str, *, extra_css: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+        self.setContentsMargins(4, 4, 4, 4)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        if extra_css:
+            self.setStyleSheet(f"QLabel {{ {extra_css} }}")
+        self._apply_height(520)
+
+    def _apply_height(self, width: int) -> None:
+        m = self.contentsMargins()
+        text_w = max(80, int(width) - m.left() - m.right())
+        fm = self.fontMetrics()
+        br = fm.boundingRect(
+            0,
+            0,
+            text_w,
+            10000,
+            int(Qt.TextFlag.TextWordWrap),
+            self.text(),
+        )
+        h = br.height() + m.top() + m.bottom() + _DESC_PAD
+        if abs(self.height() - h) > 1 or self.minimumHeight() != h:
+            self.setFixedHeight(h)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if getattr(self, "_fixing_h", False):
+            return
+        if self.width() < 120:
+            return
+        self._fixing_h = True
+        try:
+            self._apply_height(self.width())
+        finally:
+            self._fixing_h = False
+
+
+def _desc_label(text: str, *, extra_css: str = "") -> QLabel:
+    return _DescLabel(text, extra_css=extra_css)
+
+
+def list_disks() -> list[dict]:
+    try:
+        out = subprocess.check_output(
+            ["lsblk", "-d", "-n", "-b", "-J", "-o", "NAME,SIZE,MODEL,TYPE,TRAN"],
+            text=True,
+        )
+        data = json.loads(out)
+    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError):
+        return []
+    disks = []
+    for dev in data.get("blockdevices", []):
+        if dev.get("type") != "disk":
+            continue
+        name = dev.get("name") or ""
+        if name.startswith(("loop", "ram", "zram", "fd")):
+            continue
+        size_b = int(dev.get("size") or 0)
+        size_gib = size_b / (1024**3)
+        model = (dev.get("model") or "").strip() or "Disco"
+        tran = (dev.get("tran") or "").strip()
+        label = f"{model} — {size_gib:.0f} GB — /dev/{name}"
+        if tran:
+            label = f"{model} ({tran}) — {size_gib:.0f} GB — /dev/{name}"
+        disks.append({"name": name, "path": f"/dev/{name}", "label": label, "size_gib": size_gib})
+    return disks
+
+
+def load_choices() -> dict:
+    data = {}
+    for path in (CHOICES_PATH, CHOICES_CALAMARES):
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line == "---" or ":" not in line:
+                continue
+            k, v = line.split(":", 1)
+            data[k.strip()] = v.strip().strip('"')
+        break
+    return data
+
+
+def write_choices(data: dict) -> None:
+    lines = ["# Scelte installer Quelo", "---"]
+    for key in (
+        "targetDevice",
+        "targetLabel",
+        "grubDevice",
+        "grubLabel",
+        "separateHome",
+        "homeFilesystem",
+        "rootGiB",
+        "homeGiB",
+        "minRootGiB",
+        "recommendedRootGiB",
+    ):
+        if key not in data:
+            continue
+        val = data[key]
+        if isinstance(val, bool):
+            lines.append(f"{key}: {str(val).lower()}")
+        elif val is None or val == "null":
+            lines.append(f"{key}: rest")
+        elif isinstance(val, (int, float)) or (isinstance(val, str) and re.fullmatch(r"-?\d+(\.\d+)?", val)):
+            lines.append(f"{key}: {val}")
+        else:
+            lines.append(f'{key}: "{val}"')
+    text = "\n".join(lines) + "\n"
+    for path in (CHOICES_PATH, CHOICES_CALAMARES):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+
+class GrubConfirmWindow(QMainWindow):
+    def __init__(self) -> None:
+        super().__init__()
+        self.choices = load_choices()
+        self.disks = list_disks()
+        self.setWindowTitle("Quelo Audiomaker — Conferma disco e GRUB")
+        self.setMinimumSize(720, 420)
+        for logo in LOGO_CANDIDATES:
+            if logo.is_file():
+                self.setWindowIcon(QIcon(str(logo)))
+                break
+        self._build()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        QTimer.singleShot(0, self._fix_desc_heights)
+
+    def _fix_desc_heights(self) -> None:
+        for w in self.findChildren(_DescLabel):
+            if w.width() >= 120:
+                w._apply_height(w.width())
+                w.updateGeometry()
+        hint = self.sizeHint()
+        self.resize(max(self.width(), hint.width()), max(self.height(), hint.height(), 560))
+
+    def _build(self) -> None:
+        root = QWidget()
+        self.setCentralWidget(root)
+        layout = QVBoxLayout(root)
+
+        title = QLabel("Conferma disco di installazione e GRUB")
+        f = QFont()
+        f.setPointSize(15)
+        f.setBold(True)
+        title.setFont(f)
+        layout.addWidget(title)
+
+        warn = _desc_label(
+            "Attenzione: verranno cancellati tutti i dati sul disco di installazione.\n"
+            "GRUB (avvio del sistema) verrà scritto sul disco indicato sotto — "
+            "verifica che sia quello giusto.",
+            extra_css="color: #8a1f1f; font-weight: bold;",
+        )
+        layout.addWidget(warn)
+
+        target = self.choices.get("targetDevice", "")
+        target_lbl = next((d["label"] for d in self.disks if d["path"] == target), target or "(sconosciuto)")
+
+        box_inst = QGroupBox("Disco di installazione (partizioni Quelo)")
+        vi = QVBoxLayout(box_inst)
+        vi.setSpacing(8)
+        vi.addWidget(QLabel(target_lbl))
+        vi.addWidget(
+            _desc_label("Scelto nella schermata precedente — non modificabile qui.")
+        )
+        layout.addWidget(box_inst)
+
+        box_grub = QGroupBox("Attenzione: GRUB si installerà sul disco")
+        vg = QVBoxLayout(box_grub)
+        vg.setSpacing(8)
+        self.grub_combo = QComboBox()
+        idx_default = 0
+        for i, d in enumerate(self.disks):
+            self.grub_combo.addItem(d["label"], d)
+            if d["path"] == target:
+                idx_default = i
+        if self.disks:
+            self.grub_combo.setCurrentIndex(idx_default)
+        vg.addWidget(self.grub_combo)
+        vg.addWidget(
+            _desc_label(
+                "Di solito è lo stesso disco di installazione. "
+                "Cambialo solo se sai di voler scrivere il bootloader altrove."
+            )
+        )
+        layout.addWidget(box_grub)
+
+        layout.addStretch(1)
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        btn_back = QPushButton("Indietro")
+        btn_ok = QPushButton("Avanti")
+        btn_ok.setDefault(True)
+        buttons.addWidget(btn_back)
+        buttons.addWidget(btn_ok)
+        layout.addLayout(buttons)
+        btn_back.clicked.connect(self._back)
+        btn_ok.clicked.connect(self._accept)
+
+    def _back(self) -> None:
+        self.close()
+        QApplication.instance().exit(2)
+
+    def _accept(self) -> None:
+        grub = self.grub_combo.currentData()
+        if grub is None:
+            QMessageBox.warning(self, "GRUB", "Seleziona il disco per GRUB.")
+            return
+        data = dict(self.choices)
+        data["grubDevice"] = grub["path"]
+        data["grubLabel"] = grub["label"]
+        # targetLabel se manca
+        if "targetLabel" not in data:
+            t = data.get("targetDevice", "")
+            data["targetLabel"] = next((d["label"] for d in self.disks if d["path"] == t), t)
+        try:
+            # normalizza tipi
+            if isinstance(data.get("separateHome"), str):
+                data["separateHome"] = data["separateHome"].lower() == "true"
+            write_choices(data)
+        except OSError as exc:
+            QMessageBox.critical(self, "Errore", str(exc))
+            return
+        self.close()
+        QApplication.instance().exit(0)
+
+
+def main() -> int:
+    if not CHOICES_PATH.is_file() and not CHOICES_CALAMARES.is_file():
+        print("Manca quelo-install-choices.yaml — esegui prima il wizard layout.", file=sys.stderr)
+        return 1
+    app = QApplication(sys.argv)
+    win = GrubConfirmWindow()
+    win.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

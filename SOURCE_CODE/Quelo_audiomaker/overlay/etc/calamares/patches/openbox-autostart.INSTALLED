@@ -1,0 +1,11 @@
+xsetroot -solid '#111111'
+
+# Versione INSTALLATA: niente QUELO-HOME label, niente load sessione live.
+# Schermo: comportamento Debian/lxrandr nativo (niente ripristino Quelo).
+
+/usr/local/bin/quelo-pointer-barrier &
+
+blueman-applet &
+lxqt-powermanagement &
+
+/usr/local/bin/quelo-font-apply-at-start &

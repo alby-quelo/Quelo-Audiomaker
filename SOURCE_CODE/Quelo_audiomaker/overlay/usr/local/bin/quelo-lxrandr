@@ -1,0 +1,28 @@
+#!/bin/bash
+# Live: solo apre lxrandr (salva/ripristino = persistence Quelo).
+# Installata: dopo lxrandr, se esiste lxrandr-autostart.desktop,
+# toglie OnlyShowIn=LXDE (altrimenti LXQt lo ignora al boot).
+set -euo pipefail
+
+is_live() {
+  [[ -d /run/live ]] && return 0
+  grep -Eq '(^|[[:space:]])boot=live([[:space:]]|$)' /proc/cmdline 2>/dev/null && return 0
+  return 1
+}
+
+fix_lxrandr_autostart_for_lxqt() {
+  local f="${XDG_CONFIG_HOME:-${HOME}/.config}/autostart/lxrandr-autostart.desktop"
+  [[ -f "${f}" ]] || return 0
+  if grep -qE '^OnlyShowIn=' "${f}"; then
+    sed -i '/^OnlyShowIn=/d' "${f}"
+  fi
+}
+
+if is_live; then
+  exec lxrandr "$@"
+fi
+
+lxrandr "$@"
+rc=$?
+fix_lxrandr_autostart_for_lxqt || true
+exit "${rc}"

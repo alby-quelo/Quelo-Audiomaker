@@ -1,0 +1,46 @@
+#!/bin/bash
+# Ardour con ALSA in esclusiva: sospende PulseAudio per la durata della sessione.
+set -euo pipefail
+
+ardour_bin=""
+if command -v ardour >/dev/null 2>&1; then
+  ardour_bin="$(command -v ardour)"
+else
+  for bin in ardour9 ardour8 ardour7; do
+    if command -v "${bin}" >/dev/null 2>&1; then
+      ardour_bin="$(command -v "${bin}")"
+      break
+    fi
+  done
+fi
+
+if [[ -z "${ardour_bin}" ]]; then
+  echo "quelo-ardour: binario Ardour non trovato" >&2
+  exit 1
+fi
+
+# Se un vecchio seed ha lasciato engine ALSA "active" senza device, la tendina
+# schede resta vuota: disattiva lo stato rotto così Audio/MIDI Setup riparte pulito.
+fix_ardour_empty_alsa() {
+  local conf
+  shopt -s nullglob
+  for conf in "${HOME}/.config"/ardour[0-9]*/config; do
+    [[ -f "${conf}" ]] || continue
+    if grep -q 'backend="ALSA"' "${conf}" \
+      && grep -q 'active="1"' "${conf}" \
+      && grep -qE 'device=""' "${conf}" \
+      && grep -qE 'input-device=""' "${conf}" \
+      && grep -qE 'output-device=""' "${conf}"; then
+      sed -i 's/active="1"/active="0"/g' "${conf}"
+    fi
+  done
+  shopt -u nullglob
+}
+
+fix_ardour_empty_alsa
+
+if command -v pasuspender >/dev/null 2>&1; then
+  exec pasuspender -- "${ardour_bin}" "$@"
+fi
+
+exec "${ardour_bin}" "$@"

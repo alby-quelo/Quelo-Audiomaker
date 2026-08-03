@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="QUELO AUDIOMAKER">
+    <item label="BROWSER">
+      <action name="Execute"><execute>quelo-firefox</execute></action>
+    </item>
+    <item label="AUDACITY - EDITOR AUDIO">
+      <action name="Execute"><execute>audacity</execute></action>
+    </item>
+    <item label="ARDOUR - EDITOR AUDIO PRO">
+      <action name="Execute"><execute>quelo-ardour</execute></action>
+    </item>
+    <item label="REAPER - EDITOR AUDIO PRO">
+      <action name="Execute"><execute>quelo-reaper</execute></action>
+    </item>
+    <item label="MIXER PER DJSET / PODCAST">
+      <action name="Execute"><execute>quelo-mixxx</execute></action>
+    </item>
+    <item label="STREAMING LIVE">
+      <action name="Execute"><execute>quelo-butt</execute></action>
+    </item>
+    <item label="ANALISI FILE AUDIO - MEDIAINFO">
+      <action name="Execute"><execute>mediainfo-gui</execute></action>
+    </item>
+    <item label="CONVERTITORE AUDIO">
+      <action name="Execute"><execute>quelo-audio-converter</execute></action>
+    </item>
+    <item label="PALINSESTO RADIO">
+      <action name="Execute"><execute>quelo-palinsesto-radio</execute></action>
+    </item>
+    <item label="EDITOR DI TESTO">
+      <action name="Execute"><execute>mousepad</execute></action>
+    </item>
+    <item label="GESTIONE FILE">
+      <action name="Execute"><execute>quelo-filemanager</execute></action>
+    </item>
+    <item label="LETTORE PDF">
+      <action name="Execute"><execute>zathura</execute></action>
+    </item>
+    <item label="PLAYER AUDIO">
+      <action name="Execute"><execute>audacious</execute></action>
+    </item>
+    <item label="SCANNER">
+      <action name="Execute"><execute>simple-scan</execute></action>
+    </item>
+    <item label="SCREENSHOT">
+      <action name="Execute"><execute>quelo-screenshot</execute></action>
+    </item>
+    <item label="VISUALIZZATORE IMMAGINI">
+      <action name="Execute"><execute>lximage-qt</execute></action>
+    </item>
+    <item label="FOTORITOCCO">
+      <action name="Execute"><execute>mtpaint</execute></action>
+    </item>
+    <menu id="quelo-configurazioni-menu" label="CONFIGURAZIONI">
+      <item label="ASPETTO">
+        <action name="Execute"><execute>lxqt-config-appearance</execute></action>
+      </item>
+      <item label="CARATTERI MENU">
+        <action name="Execute"><execute>quelo-config-font-menu</execute></action>
+      </item>
+      <item label="CARATTERI PANNELLO INFERIORE">
+        <action name="Execute"><execute>quelo-config-font-panel</execute></action>
+      </item>
+      <item label="BLUETOOTH">
+        <action name="Execute"><execute>blueman-manager</execute></action>
+      </item>
+      <item label="RETE">
+        <action name="Execute"><execute>nm-connection-editor</execute></action>
+      </item>
+      <item label="CONDIVISIONI DI RETE">
+        <action name="Execute"><execute>smb4k</execute></action>
+      </item>
+      <item label="SCHERMO">
+        <action name="Execute"><execute>quelo-lxrandr</execute></action>
+      </item>
+      <item label="STAMPANTI">
+        <action name="Execute"><execute>sh -c 'quelo-firefox http://localhost:631'</execute></action>
+      </item>
+      <item label="VOLUME">
+        <action name="Execute"><execute>pavucontrol</execute></action>
+      </item>
+      <item label="SCHEDA FOCUSRITE SCARLETT/CLARETT">
+        <action name="Execute"><execute>alsa-scarlett-gui</execute></action>
+      </item>
+      <item label="MIXER FIREWIRE (FFADO)">
+        <action name="Execute"><execute>ffado-mixer</execute></action>
+      </item>
+      <item label="MIXER RME HAMMERFALL (HDSP)">
+        <action name="Execute"><execute>hdspmixer</execute></action>
+      </item>
+      <item label="CONFIG RME HAMMERFALL (HDSP)">
+        <action name="Execute"><execute>hdspconf</execute></action>
+      </item>
+      <item label="MIXER SCHEDA ICE1712 (ENVY24)">
+        <action name="Execute"><execute>envy24control</execute></action>
+      </item>
+      <item label="INSTALLA QUELO AUDIOMAKER SUL PC">
+        <action name="Execute"><execute>quelo-install</execute></action>
+      </item>
+    </menu>
+    <separator/>
+    <item label="TERMINALE">
+      <action name="Execute"><execute>lxterminal</execute></action>
+    </item>
+  </menu>
+</openbox_menu>

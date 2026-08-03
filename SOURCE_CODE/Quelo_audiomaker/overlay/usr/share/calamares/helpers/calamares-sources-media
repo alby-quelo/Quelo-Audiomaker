@@ -1,0 +1,66 @@
+#!/bin/sh
+# Quelo: usa il codename reale dell'immagine (sid), non "trixie" hardcodato
+# di calamares-settings-debian — altrimenti apt non vede pool/dists/<suite>.
+
+CHROOT=$(mount | grep proc | grep calamares | awk '{print $3}' | sed -e "s#/proc##g")
+KNOWN_MEDIUM_PATHS="/run/live/medium /run/initramfs/live"
+
+RELEASE="sid"
+if [ -f "$CHROOT/etc/os-release" ]; then
+    # shellcheck disable=SC1090
+    RELEASE=$(. "$CHROOT/etc/os-release"; echo "${VERSION_CODENAME:-sid}")
+fi
+if [ -z "$RELEASE" ] || [ "$RELEASE" = "n/a" ]; then
+    RELEASE="sid"
+fi
+
+# Support both dracut and initramfs configurations to avoid substitutions
+# in live-build, see: #1089618
+MEDIUM_PATH=""
+for path in $KNOWN_MEDIUM_PATHS; do
+    if [ "$(mount | grep "$path" | cut -f3 -d" ")" = "$path" ]; then
+        MEDIUM_PATH=$path
+    fi
+done
+
+if [ "$1" = "-u" ]; then
+    if [ -n "$MEDIUM_PATH" ]; then
+        umount "$CHROOT/$MEDIUM_PATH" 2>/dev/null || true
+    fi
+    rm -f "$CHROOT/etc/apt/sources.list.d/debian-live-media.list"
+    # Offline: update può fallire sui mirror di rete — non bloccare.
+    chroot "$CHROOT" apt-get update || true
+    exit 0
+fi
+
+if [ -z "$MEDIUM_PATH" ]; then
+    echo "calamares-sources-media: nessun medium live montato" >&2
+    exit 1
+fi
+
+# Durante install da medium: solo pool locale (offline-safe).
+rm -f "$CHROOT/etc/apt/sources.list.d/base.list"
+if [ -f "$CHROOT/etc/apt/sources.list" ]; then
+    mv -f "$CHROOT/etc/apt/sources.list" "$CHROOT/etc/apt/sources.list.calamares-save"
+fi
+# Disattiva altri .list di rete per questa fase
+if [ -d "$CHROOT/etc/apt/sources.list.d" ]; then
+    for f in "$CHROOT/etc/apt/sources.list.d"/*.list; do
+        [ -f "$f" ] || continue
+        case "$f" in
+            *debian-live-media.list) continue ;;
+            *) mv -f "$f" "$f.calamares-save" ;;
+        esac
+    done
+fi
+
+mkdir -p "$CHROOT/$MEDIUM_PATH"
+mount --bind "$MEDIUM_PATH" "$CHROOT/$MEDIUM_PATH"
+echo "deb [trusted=yes] file:$MEDIUM_PATH $RELEASE main" > \
+    "$CHROOT/etc/apt/sources.list.d/debian-live-media.list"
+chroot "$CHROOT" apt-get update
+# Attempt safest way to remove cruft
+rmdir "$CHROOT/run/live/medium" 2>/dev/null || true
+rmdir "$CHROOT/run/live" 2>/dev/null || true
+
+exit 0

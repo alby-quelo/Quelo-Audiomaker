@@ -1,0 +1,266 @@
+HOW-TO — Configurare il menu Quelo Audiomaker
+==============================================
+HOW-TO — Configure the Quelo Audiomaker menu
+==============================================
+
+Progetto / Project: Quelo Audiomaker
+
+
+================================================================================
+ITALIANO
+================================================================================
+
+Premessa
+--------
+Il menu Quelo (pulsante «Menu» sul pannello, tasto destro sul desktop,
+Super+Spazio) è un menu **statico** di Openbox. Non si aggiorna da solo
+quando installi un programma con apt: va modificato a mano.
+
+File del menu
+-------------
+Sorgente di riferimento (ISO / sistema):
+
+  /usr/share/quelo-audiomaker/openbox-menu.xml
+
+Copia usata da Openbox (in ordine tipico):
+
+  1) ~/.config/openbox/menu.xml     ← modifica QUI (utente)
+  2) /etc/xdg/openbox/menu.xml      ← default di sistema
+
+Se non esiste `~/.config/openbox/menu.xml`, crealo:
+
+  mkdir -p ~/.config/openbox
+  cp /usr/share/quelo-audiomaker/openbox-menu.xml ~/.config/openbox/menu.xml
+
+Dopo ogni modifica, ricarica Openbox (senza chiudere la sessione):
+
+  openbox --reconfigure
+
+Editor: Mousepad, o qualsiasi editor di testo. Salva in UTF-8.
+Fai un backup prima di editare:
+
+  cp ~/.config/openbox/menu.xml ~/.config/openbox/menu.xml.bak
+
+
+Struttura di una voce
+---------------------
+Esempio minimo:
+
+    <item label="Nome visibile nel menu">
+      <action name="Execute"><execute>comando</execute></action>
+    </item>
+
+- `label` = testo mostrato nel menu
+- `comando` = eseguibile o wrapper (es. `gimp`, `shotcut`, `quelo-firefox`)
+
+Per scoprire il comando di un programma installato:
+
+  which nome-programma
+  # oppure guarda Exec= in:
+  grep -h '^Exec=' /usr/share/applications/*.desktop | less
+
+
+AGGIUNGERE una voce
+-------------------
+1. Apri `~/.config/openbox/menu.xml`.
+2. Dentro `<menu id="root-menu" …>` … `</menu>`, inserisci un nuovo
+   blocco `<item>…</item>` dove vuoi che compaia (ordine = ordine nel menu).
+3. Esempio — aggiungere LibreOffice Writer dopo «Editor di testo»:
+
+    <item label="Editor di testo">
+      <action name="Execute"><execute>mousepad</execute></action>
+    </item>
+    <item label="LibreOffice Writer">
+      <action name="Execute"><execute>libreoffice --writer</execute></action>
+    </item>
+
+4. Salva e esegui: `openbox --reconfigure`
+5. Apri il menu e verifica la nuova voce.
+
+Aggiungere in un sottomenu (es. Configurazioni):
+inserisci l’`<item>` dentro il blocco
+
+  <menu id="quelo-configurazioni-menu" label="Configurazioni">
+    …
+  </menu>
+
+non nel root-menu principale.
+
+
+MODIFICARE una voce
+-------------------
+1. Apri `~/.config/openbox/menu.xml`.
+2. Trova l’`<item>` da cambiare (cerca il `label` o il comando).
+3. Modifica solo ciò che serve:
+   - testo: cambia `label="…"`
+   - programma: cambia il contenuto di `<execute>…</execute>`
+4. Salva e: `openbox --reconfigure`
+
+Esempio — rinominare e cambiare comando:
+
+  Prima:
+    <item label="Player Video">
+      <action name="Execute"><execute>smplayer</execute></action>
+    </item>
+
+  Dopo:
+    <item label="VLC">
+      <action name="Execute"><execute>vlc</execute></action>
+    </item>
+
+
+CANCELLARE una voce
+-------------------
+1. Apri `~/.config/openbox/menu.xml`.
+2. Cancella l’intero blocco dell’item, dall’`<item …>` fino a `</item>`
+   compreso (non lasciare tag aperti).
+3. Salva e: `openbox --reconfigure`
+
+Esempio — rimuovere Scanner:
+
+  Elimina queste righe:
+    <item label="Scanner">
+      <action name="Execute"><execute>simple-scan</execute></action>
+    </item>
+
+
+Attenzioni
+----------
+- Non rompere l’XML: ogni tag aperto deve essere chiuso; le virgolette
+  dei `label` devono essere bilanciate.
+- Non cancellare il contenitore `<menu id="root-menu" …>` né la chiusura
+  finale `</openbox_menu>`.
+- Se il menu non si apre più dopo una modifica, ripristina il backup:
+    cp ~/.config/openbox/menu.xml.bak ~/.config/openbox/menu.xml
+    openbox --reconfigure
+- Installare un pacchetto `.deb`/apt **non** aggiunge voci a questo menu.
+
+
+================================================================================
+ENGLISH
+================================================================================
+
+Overview
+--------
+The Quelo menu (panel «Menu» button, right-click on the desktop,
+Super+Space) is a **static** Openbox menu. It does **not** update
+automatically when you install software with apt: you must edit it by hand.
+
+Menu files
+----------
+Reference copy (ISO / system):
+
+  /usr/share/quelo-audiomaker/openbox-menu.xml
+
+Copy used by Openbox (typical order):
+
+  1) ~/.config/openbox/menu.xml     ← edit THIS (user)
+  2) /etc/xdg/openbox/menu.xml      ← system default
+
+If `~/.config/openbox/menu.xml` is missing, create it:
+
+  mkdir -p ~/.config/openbox
+  cp /usr/share/quelo-audiomaker/openbox-menu.xml ~/.config/openbox/menu.xml
+
+After every change, reload Openbox (without logging out):
+
+  openbox --reconfigure
+
+Use Mousepad or any text editor. Save as UTF-8.
+Backup before editing:
+
+  cp ~/.config/openbox/menu.xml ~/.config/openbox/menu.xml.bak
+
+
+Item structure
+--------------
+Minimal example:
+
+    <item label="Name shown in the menu">
+      <action name="Execute"><execute>command</execute></action>
+    </item>
+
+- `label` = text shown in the menu
+- `command` = executable or wrapper (e.g. `gimp`, `shotcut`, `quelo-firefox`)
+
+To find the command for an installed program:
+
+  which program-name
+  # or check Exec= in:
+  grep -h '^Exec=' /usr/share/applications/*.desktop | less
+
+
+ADD an item
+-----------
+1. Open `~/.config/openbox/menu.xml`.
+2. Inside `<menu id="root-menu" …>` … `</menu>`, insert a new
+   `<item>…</item>` block where you want it (order = menu order).
+3. Example — add LibreOffice Writer after «Editor di testo» / Text editor:
+
+    <item label="Editor di testo">
+      <action name="Execute"><execute>mousepad</execute></action>
+    </item>
+    <item label="LibreOffice Writer">
+      <action name="Execute"><execute>libreoffice --writer</execute></action>
+    </item>
+
+4. Save and run: `openbox --reconfigure`
+5. Open the menu and check the new entry.
+
+To add inside a submenu (e.g. Configurazioni / Settings):
+put the `<item>` inside
+
+  <menu id="quelo-configurazioni-menu" label="Configurazioni">
+    …
+  </menu>
+
+not in the main root-menu.
+
+
+MODIFY an item
+--------------
+1. Open `~/.config/openbox/menu.xml`.
+2. Find the `<item>` to change (search for `label` or the command).
+3. Change only what you need:
+   - text: edit `label="…"`
+   - program: edit the contents of `<execute>…</execute>`
+4. Save and run: `openbox --reconfigure`
+
+Example — rename and change command:
+
+  Before:
+    <item label="Player Video">
+      <action name="Execute"><execute>smplayer</execute></action>
+    </item>
+
+  After:
+    <item label="VLC">
+      <action name="Execute"><execute>vlc</execute></action>
+    </item>
+
+
+DELETE an item
+--------------
+1. Open `~/.config/openbox/menu.xml`.
+2. Delete the whole item block, from `<item …>` through `</item>`
+   inclusive (do not leave unclosed tags).
+3. Save and run: `openbox --reconfigure`
+
+Example — remove Scanner:
+
+  Delete these lines:
+    <item label="Scanner">
+      <action name="Execute"><execute>simple-scan</execute></action>
+    </item>
+
+
+Cautions
+--------
+- Do not break the XML: every opened tag must be closed; quotes in
+  `label` must be balanced.
+- Do not remove the `<menu id="root-menu" …>` container or the final
+  `</openbox_menu>` closing tag.
+- If the menu no longer opens after an edit, restore the backup:
+    cp ~/.config/openbox/menu.xml.bak ~/.config/openbox/menu.xml
+    openbox --reconfigure
+- Installing a `.deb`/apt package does **not** add entries to this menu.

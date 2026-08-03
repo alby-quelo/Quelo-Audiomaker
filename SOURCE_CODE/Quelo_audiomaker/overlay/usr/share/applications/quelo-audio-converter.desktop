@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=CONVERTITORE AUDIO
+Name[it]=CONVERTITORE AUDIO
+GenericName=Audio converter
+Comment=Quelo Audio Converter — esporta solo audio da file multimediali
+Comment[it]=Quelo Audio Converter — esporta solo audio da file multimediali
+Exec=quelo-audio-converter
+Icon=audio-x-generic
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=quelo;converter;audio;ffmpeg;convertitore;
+StartupNotify=true

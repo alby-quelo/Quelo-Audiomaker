@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Quelo: preferenza ALSA. active=0 → al primo avvio scegli la scheda hw
+     (pasuspender in quelo-ardour rilascia Pulse così le schede compaiono). -->
+<Ardour>
+  <Config/>
+  <AudioMIDISetup>
+    <EngineStates>
+      <State backend="ALSA" driver="" device="" input-device="" output-device="" sample-rate="48000" buffer-size="256" n-periods="2" input-latency="0" output-latency="0" lm-input="" lm-output="" active="0" use-buffered-io="0" midi-option="None" lru="2147483647">
+        <MIDIDevices/>
+      </State>
+    </EngineStates>
+  </AudioMIDISetup>
+</Ardour>

@@ -1,0 +1,38 @@
+---
+componentName:   quelo
+welcomeStyleCalamares: true
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 900px,620px
+windowPlacement: center
+
+strings:
+    productName:         Quelo Audiomaker
+    shortProductName:    Quelo
+    version:             0.01
+    shortVersion:        0.01
+    versionedName:       Quelo Audiomaker 0.01
+    shortVersionedName:  Quelo 0.01
+    bootloaderEntryName: Quelo Audiomaker
+    productUrl:          https://github.com/gnumerica/quelo-audiomaker
+    supportUrl:          https://github.com/gnumerica/quelo-audiomaker
+    knownIssuesUrl:      https://github.com/gnumerica/quelo-audiomaker/issues
+    releaseNotesUrl:     https://github.com/gnumerica/quelo-audiomaker
+    donateUrl:           https://github.com/gnumerica/quelo-audiomaker
+
+sidebar: widget
+navigation: widget
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+slideshowAPI: 2
+
+style:
+   SidebarBackground:    "#2a2118"
+   SidebarText:          "#f5efe6"
+   SidebarTextCurrent:   "#ffffff"
+   SidebarBackgroundCurrent: "#5c4030"

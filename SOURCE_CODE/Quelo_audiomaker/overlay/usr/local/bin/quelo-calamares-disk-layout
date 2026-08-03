@@ -1,0 +1,504 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Wizard layout disco Quelo (UX freeze schermata 4).
+
+Scrive:
+  /etc/calamares/modules/partition.conf  (partitionLayout)
+  /etc/quelo-install-choices.yaml
+  /etc/calamares/quelo-install-choices.yaml
+
+Exit 0 = OK (Avanti), 1 = Annulla/errore.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+from PyQt6.QtCore import QSize, Qt, QTimer
+from PyQt6.QtGui import QFont, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QComboBox,
+    QFormLayout,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QSizePolicy,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
+
+SIZES_PATH = Path("/etc/calamares/quelo-sizes.conf")
+PARTITION_CONF = Path("/etc/calamares/modules/partition.conf")
+CHOICES_PATH = Path("/etc/quelo-install-choices.yaml")
+CHOICES_CALAMARES = Path("/etc/calamares/quelo-install-choices.yaml")
+LOGO_CANDIDATES = [
+    Path("/etc/calamares/branding/quelo/logo.png"),
+    Path("/usr/share/quelo-audiomaker/logo.png"),
+]
+
+# Niente padding CSS. Altezza fissa da fontMetrics: il layout non puo' schiacciare i glifi.
+_DESC_PAD = 8
+
+
+class _DescLabel(QLabel):
+    """Nota descrittiva: word-wrap con altezza fissa calcolata (leggibile)."""
+
+    def __init__(self, text: str, *, extra_css: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+        self.setContentsMargins(4, 4, 4, 4)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        if extra_css:
+            self.setStyleSheet(f"QLabel {{ {extra_css} }}")
+        self._apply_height(520)
+
+    def _apply_height(self, width: int) -> None:
+        m = self.contentsMargins()
+        text_w = max(80, int(width) - m.left() - m.right())
+        fm = self.fontMetrics()
+        br = fm.boundingRect(
+            0,
+            0,
+            text_w,
+            10000,
+            int(Qt.TextFlag.TextWordWrap),
+            self.text(),
+        )
+        h = br.height() + m.top() + m.bottom() + _DESC_PAD
+        if abs(self.height() - h) > 1 or self.minimumHeight() != h:
+            self.setFixedHeight(h)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if getattr(self, "_fixing_h", False):
+            return
+        if self.width() < 120:
+            return
+        self._fixing_h = True
+        try:
+            self._apply_height(self.width())
+        finally:
+            self._fixing_h = False
+
+
+def _desc_label(text: str, *, extra_css: str = "") -> QLabel:
+    return _DescLabel(text, extra_css=extra_css)
+
+
+def _option_block(radio: QRadioButton, note_text: str) -> QWidget:
+    """Radio + nota indentata sotto, con spazio sotto: niente sovrapposizioni."""
+    block = QWidget()
+    v = QVBoxLayout(block)
+    v.setContentsMargins(0, 0, 0, 14)
+    v.setSpacing(6)
+    v.addWidget(radio)
+    note = _desc_label(note_text)
+    note.setContentsMargins(28, 0, 8, 0)
+    v.addWidget(note)
+    return block
+
+
+def load_sizes() -> dict:
+    min_root, rec_root, min_home = 40, 80, 10
+    if SIZES_PATH.is_file():
+        text = SIZES_PATH.read_text(encoding="utf-8", errors="replace")
+        for key, default in (
+            ("minRootGiB", min_root),
+            ("recommendedRootGiB", rec_root),
+            ("minHomeGiB", min_home),
+        ):
+            m = re.search(rf"^{key}:\s*(\d+)", text, re.M)
+            if m:
+                if key == "minRootGiB":
+                    min_root = int(m.group(1))
+                elif key == "recommendedRootGiB":
+                    rec_root = int(m.group(1))
+                else:
+                    min_home = int(m.group(1))
+    return {"minRootGiB": min_root, "recommendedRootGiB": rec_root, "minHomeGiB": min_home}
+
+
+def list_disks() -> list[dict]:
+    """Elenca dischi fisici (non partizioni)."""
+    try:
+        out = subprocess.check_output(
+            [
+                "lsblk",
+                "-d",
+                "-n",
+                "-b",
+                "-J",
+                "-o",
+                "NAME,SIZE,MODEL,TYPE,TRAN,RM",
+            ],
+            text=True,
+        )
+        data = json.loads(out)
+    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError):
+        return []
+
+    disks = []
+    for dev in data.get("blockdevices", []):
+        if dev.get("type") != "disk":
+            continue
+        name = dev.get("name") or ""
+        # Escludi loop / ram
+        if name.startswith(("loop", "ram", "zram", "fd")):
+            continue
+        size_b = int(dev.get("size") or 0)
+        size_gib = size_b / (1024**3)
+        model = (dev.get("model") or "").strip() or "Disco"
+        tran = (dev.get("tran") or "").strip()
+        label = f"{model} — {size_gib:.0f} GB — /dev/{name}"
+        if tran:
+            label = f"{model} ({tran}) — {size_gib:.0f} GB — /dev/{name}"
+        disks.append(
+            {
+                "name": name,
+                "path": f"/dev/{name}",
+                "size_gib": size_gib,
+                "label": label,
+            }
+        )
+    return disks
+
+
+def write_choices(choices: dict) -> None:
+    lines = [
+        "# Scelte wizard layout disco Quelo (generato automaticamente)",
+        "---",
+        f"targetDevice: \"{choices['targetDevice']}\"",
+        f"targetLabel: \"{choices.get('targetLabel', choices['targetDevice'])}\"",
+        f"separateHome: {str(choices['separateHome']).lower()}",
+        f"homeFilesystem: \"{choices['homeFilesystem']}\"",
+        f"rootGiB: {choices['rootGiB']}",
+        f"homeGiB: {choices['homeGiB'] if choices['homeGiB'] is not None else 'rest'}",
+        f"minRootGiB: {choices['minRootGiB']}",
+        f"recommendedRootGiB: {choices['recommendedRootGiB']}",
+    ]
+    text = "\n".join(lines) + "\n"
+    for path in (CHOICES_PATH, CHOICES_CALAMARES):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+
+def write_partition_conf(choices: dict) -> None:
+    """Riscrive partitionLayout in partition.conf mantenendo l'intestazione fissa."""
+    root_gib = int(choices["rootGiB"])
+    separate = choices["separateHome"]
+    home_fs = choices["homeFilesystem"]
+
+    layout_lines = [
+        "partitionLayout:",
+        "    - name: \"root\"",
+        "      filesystem: \"ext4\"",
+        "      mountPoint: \"/\"",
+        f"      size: {root_gib}G",
+        f"      minSize: {choices['minRootGiB']}G",
+    ]
+    if separate:
+        if home_fs == "exfat":
+            layout_lines += [
+                "    - name: \"HOME\"",
+                "      filesystem: \"exfat\"",
+                "      mountPoint: \"/media/HOME\"",
+                "      size: 100%",
+            ]
+        else:
+            layout_lines += [
+                "    - name: \"HOME\"",
+                "      filesystem: \"ext4\"",
+                "      mountPoint: \"/home\"",
+                "      size: 100%",
+            ]
+
+    header = """# partition.conf Quelo — generato da quelo-calamares-disk-layout
+---
+efi:
+    mountPoint:         "/boot/efi"
+    recommendedSize:    512MiB
+    minimumSize:        32MiB
+    label:              "EFI"
+
+userSwapChoices:
+    - none
+    - small
+    - suspend
+    - file
+
+luksGeneration: luks1
+drawNestedPartitions: false
+alwaysShowPartitionLabels: true
+allowManualPartitioning: false
+initialPartitioningChoice: erase
+defaultFileSystemType: "ext4"
+essentialMounts: [ "live-*", "control", "ventoy" ]
+
+"""
+    PARTITION_CONF.parent.mkdir(parents=True, exist_ok=True)
+    PARTITION_CONF.write_text(header + "\n".join(layout_lines) + "\n", encoding="utf-8")
+
+
+class DiskLayoutWindow(QMainWindow):
+    def __init__(self) -> None:
+        super().__init__()
+        self.sizes = load_sizes()
+        self.disks = list_disks()
+        self.setWindowTitle("Quelo Audiomaker — Organizzazione disco")
+        self.setMinimumSize(720, 640)
+        for logo in LOGO_CANDIDATES:
+            if logo.is_file():
+                self.setWindowIcon(QIcon(str(logo)))
+                break
+        self._build()
+        self._sync_ui()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        QTimer.singleShot(0, self._fix_desc_heights)
+
+    def _fix_desc_heights(self) -> None:
+        for w in self.findChildren(_DescLabel):
+            if w.width() >= 120:
+                w._apply_height(w.width())
+                w.updateGeometry()
+        # Finestra abbastanza alta da non sovrapporre i blocchi.
+        hint = self.sizeHint()
+        self.resize(max(self.width(), hint.width()), max(self.height(), hint.height(), 780))
+
+    def _build(self) -> None:
+        shell = QWidget()
+        self.setCentralWidget(shell)
+        outer = QVBoxLayout(shell)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setSpacing(14)
+        layout.setContentsMargins(18, 18, 18, 12)
+
+        head = QHBoxLayout()
+        logo_lbl = QLabel()
+        for logo in LOGO_CANDIDATES:
+            if logo.is_file():
+                pix = QPixmap(str(logo)).scaled(
+                    64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+                )
+                logo_lbl.setPixmap(pix)
+                break
+        head.addWidget(logo_lbl)
+        title_box = QVBoxLayout()
+        t = QLabel("Come vuoi organizzare il disco?")
+        f = QFont()
+        f.setPointSize(16)
+        f.setBold(True)
+        t.setFont(f)
+        title_box.addWidget(t)
+        title_box.addWidget(
+            _desc_label("Scegli il disco di destinazione e il layout delle partizioni.")
+        )
+        head.addLayout(title_box, 1)
+        layout.addLayout(head)
+
+        # Disco
+        disk_box = QGroupBox("Disco di destinazione")
+        disk_form = QVBoxLayout(disk_box)
+        disk_form.setSpacing(8)
+        self.disk_combo = QComboBox()
+        if not self.disks:
+            self.disk_combo.addItem("(nessun disco trovato)", None)
+        else:
+            for d in self.disks:
+                self.disk_combo.addItem(d["label"], d)
+        disk_form.addWidget(self.disk_combo)
+        disk_form.addWidget(
+            _desc_label("Scegli qui il disco su cui installare Quelo Audiomaker.")
+        )
+        layout.addWidget(disk_box)
+
+        # Layout
+        layout_box = QGroupBox("Organizzazione")
+        lv = QVBoxLayout(layout_box)
+        lv.setSpacing(2)
+        lv.setContentsMargins(10, 14, 10, 6)
+        self.radio_single = QRadioButton("Tutto in una partizione (/)")
+        self.radio_separate = QRadioButton(
+            "Sistema e HOME separate (/ + HOME) — consigliato"
+        )
+        self.radio_separate.setChecked(True)
+        self.grp_layout = QButtonGroup(self)
+        self.grp_layout.addButton(self.radio_single)
+        self.grp_layout.addButton(self.radio_separate)
+        lv.addWidget(
+            _option_block(
+                self.radio_single,
+                "Più semplice. Sistema e file insieme; meno pratico per aggiornamenti futuri.",
+            )
+        )
+        lv.addWidget(
+            _option_block(
+                self.radio_separate,
+                "Puoi reinstallare il sistema senza perdere i file in HOME.",
+            )
+        )
+        layout.addWidget(layout_box)
+
+        # HOME FS
+        self.home_box = QGroupBox("Formato di HOME")
+        hv = QVBoxLayout(self.home_box)
+        hv.setSpacing(2)
+        hv.setContentsMargins(10, 14, 10, 6)
+        self.radio_exfat = QRadioButton("exFAT — default")
+        self.radio_ext4 = QRadioButton("ext4")
+        self.radio_exfat.setChecked(True)
+        self.grp_fs = QButtonGroup(self)
+        self.grp_fs.addButton(self.radio_exfat)
+        self.grp_fs.addButton(self.radio_ext4)
+        hv.addWidget(
+            _option_block(
+                self.radio_exfat,
+                "Condivisibile con Windows e macOS (utile su SSD esterno). "
+                "I file media stanno qui una sola volta. La home Unix resta piccola su /.",
+            )
+        )
+        hv.addWidget(
+            _option_block(
+                self.radio_ext4,
+                "Solo Linux: permessi e symlink nativi; non leggibile da Windows.",
+            )
+        )
+        layout.addWidget(self.home_box)
+
+        # Sizes
+        size_box = QGroupBox("Dimensioni")
+        form = QFormLayout(size_box)
+        form.setVerticalSpacing(8)
+        self.root_spin = QSpinBox()
+        self.root_spin.setRange(1, 100000)
+        self.root_spin.setSuffix(" GiB")
+        self.root_spin.setValue(self.sizes["recommendedRootGiB"])
+        form.addRow("Partizione di sistema (/):", self.root_spin)
+        self.home_spin = QSpinBox()
+        self.home_spin.setRange(0, 100000)
+        self.home_spin.setSpecialValueText("resto del disco")
+        self.home_spin.setValue(0)
+        self.home_spin.setSuffix(" GiB")
+        form.addRow("Partizione HOME:", self.home_spin)
+        self.size_hint = _desc_label(
+            f"Consigliati {self.sizes['recommendedRootGiB']} GiB per /. "
+            f"Minimo {self.sizes['minRootGiB']} GiB."
+        )
+        form.addRow(self.size_hint)
+        layout.addWidget(size_box)
+
+        self.error_lbl = _desc_label("", extra_css="color: #b00020; font-weight: bold;")
+        layout.addWidget(self.error_lbl)
+        layout.addStretch(1)
+
+        scroll.setWidget(content)
+        outer.addWidget(scroll, 1)
+
+        buttons = QHBoxLayout()
+        buttons.setContentsMargins(18, 8, 18, 14)
+        buttons.addStretch(1)
+        self.btn_cancel = QPushButton("Annulla")
+        self.btn_next = QPushButton("Avanti")
+        self.btn_next.setDefault(True)
+        buttons.addWidget(self.btn_cancel)
+        buttons.addWidget(self.btn_next)
+        outer.addLayout(buttons)
+
+        self.radio_single.toggled.connect(self._sync_ui)
+        self.radio_separate.toggled.connect(self._sync_ui)
+        self.root_spin.valueChanged.connect(self._validate)
+        self.disk_combo.currentIndexChanged.connect(self._validate)
+        self.btn_cancel.clicked.connect(self._cancel)
+        self.btn_next.clicked.connect(self._accept)
+
+    def _sync_ui(self) -> None:
+        sep = self.radio_separate.isChecked()
+        self.home_box.setVisible(sep)
+        self.home_spin.setEnabled(sep)
+        self._validate()
+
+    def _validate(self) -> bool:
+        ok = True
+        msgs = []
+        min_root = self.sizes["minRootGiB"]
+        root_gib = self.root_spin.value()
+        disk = self.disk_combo.currentData()
+        if disk is None:
+            ok = False
+            msgs.append("Seleziona un disco di destinazione.")
+        elif root_gib < min_root:
+            ok = False
+            msgs.append(
+                f"La partizione di sistema non può essere inferiore a {min_root} GiB."
+            )
+        elif disk and root_gib >= disk["size_gib"] - 1:
+            ok = False
+            msgs.append("La partizione / lascia troppo poco spazio sul disco.")
+        self.error_lbl.setText("\n".join(msgs))
+        self.btn_next.setEnabled(ok)
+        return ok
+
+    def _cancel(self) -> None:
+        self.close()
+        QApplication.instance().exit(1)
+
+    def _accept(self) -> None:
+        if not self._validate():
+            return
+        disk = self.disk_combo.currentData()
+        separate = self.radio_separate.isChecked()
+        home_fs = "exfat" if self.radio_exfat.isChecked() else "ext4"
+        home_gib = self.home_spin.value()
+        choices = {
+            "targetDevice": disk["path"],
+            "targetLabel": disk["label"],
+            "separateHome": separate,
+            "homeFilesystem": home_fs if separate else "none",
+            "rootGiB": self.root_spin.value(),
+            "homeGiB": None if home_gib == 0 else home_gib,
+            "minRootGiB": self.sizes["minRootGiB"],
+            "recommendedRootGiB": self.sizes["recommendedRootGiB"],
+        }
+        try:
+            write_choices(choices)
+            write_partition_conf(choices)
+        except OSError as exc:
+            QMessageBox.critical(self, "Errore", f"Impossibile salvare la configurazione:\n{exc}")
+            return
+        self.close()
+        QApplication.instance().exit(0)
+
+
+def main() -> int:
+    app = QApplication(sys.argv)
+    app.setApplicationName("Quelo Disk Layout")
+    win = DiskLayoutWindow()
+    win.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

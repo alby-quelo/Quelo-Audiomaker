@@ -1,0 +1,74 @@
+#!/bin/bash
+# Prepara Calamares / LightDM sulla live: script eseguibili, niente DM al boot.
+set -e
+
+chmod 755 /etc/calamares/scripts/*.sh 2>/dev/null || true
+chmod 755 /etc/calamares/patches/*.sh 2>/dev/null || true
+chmod 755 /usr/share/calamares/helpers/calamares-sources-media 2>/dev/null || true
+chmod 755 /usr/share/calamares/helpers/calamares-sources-final 2>/dev/null || true
+chmod 755 /usr/local/bin/quelo-install 2>/dev/null || true
+chmod 755 /usr/local/bin/quelo-calamares-disk-layout 2>/dev/null || true
+chmod 755 /usr/local/bin/quelo-calamares-grub-confirm 2>/dev/null || true
+chmod 755 /usr/local/bin/quelo-calamares-riepilogo 2>/dev/null || true
+chmod 755 /usr/local/bin/quelo-desktop-install-icon.sh 2>/dev/null || true
+
+# Allinea versione branding alla release corrente.
+if [[ -f /etc/quelo-audiomaker-version ]]; then
+  VER="$(tr -d '[:space:]' </etc/quelo-audiomaker-version)"
+  if [[ -n "${VER}" && -f /etc/calamares/branding/quelo/branding.desc ]]; then
+    sed -i -E "s/^([[:space:]]*version:[[:space:]]*).*/\\1${VER}/" \
+      /etc/calamares/branding/quelo/branding.desc
+    sed -i -E "s/^([[:space:]]*shortVersion:[[:space:]]*).*/\\1${VER}/" \
+      /etc/calamares/branding/quelo/branding.desc
+    sed -i -E "s/^([[:space:]]*versionedName:[[:space:]]*).*/\\1Quelo Audiomaker ${VER}/" \
+      /etc/calamares/branding/quelo/branding.desc
+    sed -i -E "s/^([[:space:]]*shortVersionedName:[[:space:]]*).*/\\1Quelo ${VER}/" \
+      /etc/calamares/branding/quelo/branding.desc
+  fi
+fi
+
+# Traduzioni italiane custom (Welcome / Fine) → override del catalogo Calamares.
+mkdir -p /usr/share/calamares/lang
+TS="/etc/calamares/branding/quelo/lang/calamares_it_IT.ts"
+QM="/usr/share/calamares/lang/calamares_it_IT.qm"
+if [[ -f "${TS}" ]]; then
+  LRELEASE=""
+  if command -v lrelease-qt6 >/dev/null 2>&1; then
+    LRELEASE=lrelease-qt6
+  elif command -v lrelease >/dev/null 2>&1; then
+    LRELEASE=lrelease
+  elif [[ -x /usr/lib/qt6/bin/lrelease ]]; then
+    LRELEASE=/usr/lib/qt6/bin/lrelease
+  fi
+  if [[ -n "${LRELEASE}" ]]; then
+    "${LRELEASE}" "${TS}" -qm "${QM}"
+  else
+    echo "0470-quelo-calamares: ATTENZIONE lrelease non trovato, testi IT stock" >&2
+  fi
+fi
+# Tool di build non serve sulla live.
+apt-get purge -y qt6-l10n-tools 2>/dev/null || true
+
+# Live: niente login LightDM (resta getty+startx come root).
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl disable lightdm.service 2>/dev/null || true
+  systemctl disable sddm.service 2>/dev/null || true
+fi
+
+# Niente icona Debian / autostart Calamares stock sulla live Quelo.
+rm -f /etc/xdg/autostart/calamares-desktop-icon.desktop 2>/dev/null || true
+rm -f /usr/share/applications/calamares-install-debian.desktop 2>/dev/null || true
+rm -f /usr/bin/add-calamares-desktop-icon 2>/dev/null || true
+
+# bootloader richiede "partition" in sequenza; noi usiamo quelo-partition-disk.
+# Riscrittura dependency altrimenti Calamares non parte (initFailed).
+while IFS= read -r desc; do
+  [[ -f "${desc}" ]] || continue
+  if grep -q 'requiredModules:.*"partition"' "${desc}" 2>/dev/null; then
+    sed -i 's/requiredModules:[[:space:]]*\[[[:space:]]*"partition"[[:space:]]*\]/requiredModules: [ "quelo-partition-disk" ]/' \
+      "${desc}"
+    echo "0470-quelo-calamares: patched ${desc} → require quelo-partition-disk"
+  fi
+done < <(find /usr/lib -path '*/calamares/modules/bootloader/module.desc' 2>/dev/null)
+
+exit 0

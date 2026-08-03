@@ -1,0 +1,4 @@
+# Locales abilitati
+it_IT.UTF-8 UTF-8
+# Richiesto da DaVinci Resolve (crash UI senza en_US.UTF-8).
+en_US.UTF-8 UTF-8

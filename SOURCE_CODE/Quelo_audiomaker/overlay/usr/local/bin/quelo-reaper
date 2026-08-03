@@ -1,0 +1,64 @@
+#!/bin/bash
+# REAPER → ALSA in esclusiva: Pulse sospeso dal wrapper (pasuspender).
+# Nota: in reaper.ini, linux_audio_mode: 0=ALSA, 1=JACK, 2=PulseAudio, 3=Dummy.
+set -euo pipefail
+
+reaper_bin=""
+if [[ -x /usr/local/bin/reaper ]]; then
+  reaper_bin=/usr/local/bin/reaper
+elif [[ -x /opt/REAPER/reaper ]]; then
+  reaper_bin=/opt/REAPER/reaper
+fi
+
+if [[ -z "${reaper_bin}" ]]; then
+  echo "quelo-reaper: REAPER non trovato (/opt/REAPER)" >&2
+  exit 1
+fi
+
+ensure_alsa_ini() {
+  local ini="${HOME}/.config/REAPER/reaper.ini"
+  mkdir -p "${HOME}/.config/REAPER"
+  if [[ ! -f "${ini}" ]]; then
+    cat >"${ini}" <<'EOF'
+; Quelo Audiomaker — ALSA (0). Pulse sospeso da quelo-reaper/pasuspender.
+[REAPER]
+linux_audio_mode=0
+linux_auto_pasuspend=0
+linux_audio_nch_in=2
+linux_audio_nch_out=2
+linux_audio_srate=48000
+linux_audio_bsize=512
+linux_audio_bufs=3
+linux_audio_bits=32
+linux_audio_srateor=1
+alsa_indev=
+alsa_outdev=
+jack_options=0
+jack_launchcmd=
+EOF
+    return 0
+  fi
+  # Migrazione: vecchio seed metteva mode=1 (JACK) → hang senza jackd.
+  if grep -qE '^linux_audio_mode=1[[:space:]]*$' "${ini}"; then
+    sed -i 's/^linux_audio_mode=1[[:space:]]*$/linux_audio_mode=0/' "${ini}"
+  fi
+  # Evita pasuspender annidato (wrapper + REAPER) che può piantare la GUI.
+  if grep -qE '^linux_auto_pasuspend=1[[:space:]]*$' "${ini}"; then
+    sed -i 's/^linux_auto_pasuspend=1[[:space:]]*$/linux_auto_pasuspend=0/' "${ini}"
+  fi
+  if ! grep -qE '^linux_audio_mode=' "${ini}"; then
+    if grep -qE '^\[REAPER\]' "${ini}"; then
+      sed -i '/^\[REAPER\]/a linux_audio_mode=0' "${ini}"
+    else
+      printf '\n[REAPER]\nlinux_audio_mode=0\nlinux_auto_pasuspend=0\n' >>"${ini}"
+    fi
+  fi
+}
+
+ensure_alsa_ini
+
+if command -v pasuspender >/dev/null 2>&1; then
+  exec pasuspender -- "${reaper_bin}" "$@"
+fi
+
+exec "${reaper_bin}" "$@"

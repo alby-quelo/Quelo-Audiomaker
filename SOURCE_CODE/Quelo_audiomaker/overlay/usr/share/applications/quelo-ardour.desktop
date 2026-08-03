@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ardour - Editor Audio Pro
+Name[it]=Ardour - Editor Audio Pro
+GenericName=DAW
+Comment=Ardour — digital audio workstation
+Comment[it]=Ardour — digital audio workstation
+Exec=quelo-ardour
+Icon=ardour
+Terminal=false
+Categories=AudioVideo;Audio;Midi;Sequencer;
+Keywords=ardour;daw;audio;editor;alsa;
+StartupNotify=true

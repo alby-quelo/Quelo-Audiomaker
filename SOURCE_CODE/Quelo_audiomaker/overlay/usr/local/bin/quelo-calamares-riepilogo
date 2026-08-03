@@ -1,0 +1,556 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Riepilogo pre-installazione Quelo: schema partizioni prima/dopo, disco, GRUB.
+
+Uso:
+  quelo-calamares-riepilogo           → dialog PyQt (0=Avanti, 1=Annulla, 2=Indietro)
+  quelo-calamares-riepilogo --write-qml → genera QML per notesqml Calamares (niente GUI)
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPen
+from PyQt6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+CHOICES_PATH = Path("/etc/quelo-install-choices.yaml")
+CHOICES_CALAMARES = Path("/etc/calamares/quelo-install-choices.yaml")
+QML_OUT = Path("/etc/calamares/branding/quelo/notesqml@quelo-riepilogo.qml")
+LOGO_CANDIDATES = [
+    Path("/etc/calamares/branding/quelo/logo.png"),
+    Path("/usr/share/quelo-audiomaker/logo.png"),
+]
+
+COLOR_EFI = "#3d7ea6"
+COLOR_ROOT = "#2e8b57"
+COLOR_HOME = "#c4782a"
+COLOR_OTHER = "#6b7280"
+COLOR_EMPTY = "#d1d5db"
+
+
+def load_choices() -> dict:
+    data: dict = {}
+    for path in (CHOICES_PATH, CHOICES_CALAMARES):
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or line == "---" or ":" not in line:
+                continue
+            k, v = line.split(":", 1)
+            data[k.strip()] = v.strip().strip('"')
+        break
+    return data
+
+
+def is_uefi() -> bool:
+    return Path("/sys/firmware/efi").is_dir()
+
+
+def fmt_size(size_b: int) -> str:
+    if size_b <= 0:
+        return "?"
+    gib = size_b / (1024**3)
+    if gib >= 10:
+        return f"{gib:.0f} GiB"
+    if gib >= 1:
+        return f"{gib:.1f} GiB"
+    mib = size_b / (1024**2)
+    return f"{mib:.0f} MiB"
+
+
+def current_segments(disk: str) -> list[dict]:
+    """Partizioni attuali sul disco target (prima)."""
+    try:
+        out = subprocess.check_output(
+            ["lsblk", "-b", "-n", "-J", "-o", "NAME,SIZE,FSTYPE,LABEL,TYPE,PKNAME", disk],
+            text=True,
+        )
+        data = json.loads(out)
+    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError):
+        return [{"label": "Impossibile leggere il disco", "size": 1, "color": COLOR_OTHER, "detail": disk}]
+
+    parts: list[dict] = []
+    for dev in data.get("blockdevices", []):
+        # lsblk su /dev/sda restituisce il disco; i figli sono in children
+        children = dev.get("children") or []
+        if not children and dev.get("type") == "part":
+            children = [dev]
+        for ch in children:
+            if ch.get("type") not in ("part", "crypt", "lvm"):
+                continue
+            size = int(ch.get("size") or 0)
+            fstype = (ch.get("fstype") or "").strip() or "?"
+            label = (ch.get("label") or "").strip()
+            name = ch.get("name") or ""
+            title = label or name or fstype
+            detail = f"{fstype}" + (f" · {label}" if label else "")
+            parts.append(
+                {
+                    "label": title[:18],
+                    "size": max(size, 1),
+                    "color": COLOR_OTHER,
+                    "detail": detail,
+                }
+            )
+        break
+
+    if not parts:
+        # Disco vuoto o senza partizioni
+        size = int((data.get("blockdevices") or [{}])[0].get("size") or 1)
+        return [
+            {
+                "label": "vuoto",
+                "size": max(size, 1),
+                "color": COLOR_EMPTY,
+                "detail": "nessuna partizione",
+            }
+        ]
+    return parts
+
+
+def planned_segments(choices: dict) -> list[dict]:
+    """Layout Quelo previsto (dopo)."""
+    try:
+        root_gib = float(choices.get("rootGiB", "80"))
+    except ValueError:
+        root_gib = 80.0
+    separate = str(choices.get("separateHome", "false")).lower() == "true"
+    home_fs = choices.get("homeFilesystem", "exfat") or "exfat"
+    disk = choices.get("targetDevice", "")
+
+    disk_size = 0
+    try:
+        out = subprocess.check_output(["lsblk", "-b", "-dn", "-o", "SIZE", disk], text=True)
+        disk_size = int(out.strip().splitlines()[0])
+    except (subprocess.CalledProcessError, ValueError, FileNotFoundError, IndexError):
+        disk_size = int((root_gib + 40) * (1024**3))
+
+    segs: list[dict] = []
+    used = 0
+    if is_uefi():
+        efi_b = 512 * 1024 * 1024
+        segs.append(
+            {
+                "label": "EFI",
+                "size": efi_b,
+                "color": COLOR_EFI,
+                "detail": "fat32 · /boot/efi · 512 MiB",
+            }
+        )
+        used += efi_b
+
+    root_b = int(root_gib * (1024**3))
+    segs.append(
+        {
+            "label": "sistema (/)",
+            "size": root_b,
+            "color": COLOR_ROOT,
+            "detail": f"ext4 · / · {root_gib:g} GiB",
+        }
+    )
+    used += root_b
+
+    if separate:
+        home_b = max(disk_size - used, 1)
+        mount = "/media/HOME" if home_fs == "exfat" else "/home"
+        segs.append(
+            {
+                "label": "HOME",
+                "size": home_b,
+                "color": COLOR_HOME,
+                "detail": f"{home_fs} · {mount} · resto del disco",
+            }
+        )
+    else:
+        rest = max(disk_size - used, 0)
+        if rest > 64 * 1024 * 1024:
+            segs.append(
+                {
+                    "label": "libero",
+                    "size": rest,
+                    "color": COLOR_EMPTY,
+                    "detail": "spazio non usato",
+                }
+            )
+    return segs
+
+
+class PartitionBar(QWidget):
+    """Barra colorata proporzionale alle dimensioni."""
+
+    def __init__(self, segments: list[dict], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.segments = segments or [
+            {"label": "?", "size": 1, "color": COLOR_OTHER, "detail": ""}
+        ]
+        self.setMinimumHeight(52)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def paintEvent(self, _event) -> None:  # noqa: N802
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        total = sum(max(int(s.get("size") or 0), 1) for s in self.segments)
+        w, h = self.width(), self.height()
+        margin = 1.0
+        x = margin
+        usable = max(w - 2 * margin, 1.0)
+        radius = 6.0
+        for seg in self.segments:
+            sw = usable * (max(int(seg.get("size") or 0), 1) / total)
+            sw = max(sw, 3.0)
+            rect = QRectF(x, margin, sw - 1.0, h - 2 * margin)
+            painter.setPen(QPen(QColor("#374151"), 1))
+            painter.setBrush(QColor(seg.get("color") or COLOR_OTHER))
+            painter.drawRoundedRect(rect, radius, radius)
+            if sw >= 48:
+                painter.setPen(QColor("#ffffff" if seg.get("color") != COLOR_EMPTY else "#111827"))
+                font = QFont()
+                font.setPointSize(9)
+                font.setBold(True)
+                painter.setFont(font)
+                text = str(seg.get("label") or "")
+                painter.drawText(rect.adjusted(4, 0, -4, 0), Qt.AlignmentFlag.AlignCenter, text)
+            x += sw
+        painter.end()
+
+
+class Legend(QWidget):
+    def __init__(self, segments: list[dict], parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 4, 0, 0)
+        lay.setSpacing(2)
+        for seg in segments:
+            size_s = fmt_size(int(seg.get("size") or 0))
+            detail = seg.get("detail") or ""
+            row = QLabel(f"● {seg.get('label', '')} — {size_s}" + (f"  ({detail})" if detail else ""))
+            row.setStyleSheet(f"color: {seg.get('color') or COLOR_OTHER};")
+            row.setWordWrap(True)
+            lay.addWidget(row)
+
+
+class RiepilogoWindow(QMainWindow):
+    def __init__(self, choices: dict) -> None:
+        super().__init__()
+        self.choices = choices
+        self.setWindowTitle("Quelo Audiomaker — Riepilogo installazione")
+        self.setMinimumSize(780, 640)
+        self.resize(820, 700)
+        for logo in LOGO_CANDIDATES:
+            if logo.is_file():
+                self.setWindowIcon(QIcon(str(logo)))
+                break
+        self._build()
+
+    def _build(self) -> None:
+        # Shell: contenuto scrollabile + bottoni SEMPRE visibili in basso.
+        shell = QWidget()
+        self.setCentralWidget(shell)
+        shell_layout = QVBoxLayout(shell)
+        shell_layout.setContentsMargins(8, 8, 8, 8)
+        shell_layout.setSpacing(8)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        shell_layout.addWidget(scroll, 1)
+
+        root = QWidget()
+        scroll.setWidget(root)
+        layout = QVBoxLayout(root)
+        layout.setSpacing(8)
+
+        title = QLabel("Riepilogo prima dell'installazione")
+        f = QFont()
+        f.setPointSize(14)
+        f.setBold(True)
+        title.setFont(f)
+        layout.addWidget(title)
+
+        warn = QLabel(
+            "Controlla attentamente disco, partizioni e GRUB.\n"
+            "Tutti i dati sul disco di installazione verranno cancellati."
+        )
+        warn.setWordWrap(True)
+        warn.setStyleSheet("color: #8a1f1f; font-weight: bold;")
+        layout.addWidget(warn)
+
+        target = self.choices.get("targetDevice", "")
+        target_lbl = self.choices.get("targetLabel") or target
+        grub = self.choices.get("grubDevice") or target
+        grub_lbl = self.choices.get("grubLabel") or grub
+
+        box_disk = QGroupBox("Disco di installazione")
+        vd = QVBoxLayout(box_disk)
+        vd.setContentsMargins(8, 6, 8, 6)
+        vd.addWidget(QLabel(target_lbl))
+        vd.addWidget(QLabel(f"Percorso: {target}"))
+        layout.addWidget(box_disk)
+
+        box_grub = QGroupBox("Dove viene installato GRUB (avvio)")
+        vg = QVBoxLayout(box_grub)
+        vg.setContentsMargins(8, 6, 8, 6)
+        vg.addWidget(QLabel(grub_lbl))
+        vg.addWidget(QLabel(f"Percorso: {grub}"))
+        if grub != target:
+            note = QLabel(
+                "Nota: GRUB è su un disco diverso da quello su cui stiamo installando Quelo."
+            )
+            note.setStyleSheet("color: #8a1f1f; font-weight: bold;")
+            note.setWordWrap(True)
+            vg.addWidget(note)
+        layout.addWidget(box_grub)
+
+        before = current_segments(target)
+        after = planned_segments(self.choices)
+
+        box_before = QGroupBox("Partizioni ORA (prima)")
+        vb = QVBoxLayout(box_before)
+        vb.setContentsMargins(8, 6, 8, 6)
+        vb.addWidget(PartitionBar(before))
+        vb.addWidget(Legend(before))
+        layout.addWidget(box_before)
+
+        box_after = QGroupBox("Partizioni DOPO (schema Quelo)")
+        va = QVBoxLayout(box_after)
+        va.setContentsMargins(8, 6, 8, 6)
+        va.addWidget(PartitionBar(after))
+        va.addWidget(Legend(after))
+        layout.addWidget(box_after)
+
+        tip = QLabel(
+            "Software incluso (tra gli altri): Mixxx, Ardour, REAPER, Audacity, Audacious, "
+            "Firefox, Fotoritocco.\n"
+            "Se qualcosa non torna: Indietro per correggere disco/GRUB, "
+            "oppure Annulla e riparti dall'installer."
+        )
+        tip.setWordWrap(True)
+        layout.addWidget(tip)
+        layout.addStretch(1)
+
+        buttons = QHBoxLayout()
+        btn_cancel = QPushButton("Annulla")
+        btn_back = QPushButton("Indietro")
+        btn_ok = QPushButton("OK")
+        btn_ok.setDefault(True)
+        buttons.addWidget(btn_cancel)
+        buttons.addStretch(1)
+        buttons.addWidget(btn_back)
+        buttons.addWidget(btn_ok)
+        shell_layout.addLayout(buttons)
+        btn_cancel.clicked.connect(self._cancel)
+        btn_back.clicked.connect(self._back)
+        btn_ok.clicked.connect(self._accept)
+
+    def _cancel(self) -> None:
+        self.close()
+        QApplication.instance().exit(1)
+
+    def _back(self) -> None:
+        self.close()
+        QApplication.instance().exit(2)
+
+    def _accept(self) -> None:
+        self.close()
+        QApplication.instance().exit(0)
+
+
+def _qml_escape(s: str) -> str:
+    return (
+        s.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+    )
+
+
+def write_qml(choices: dict, path: Path = QML_OUT) -> None:
+    """Genera pagina notesqml Calamares (stesso contenuto del dialog)."""
+    target = choices.get("targetDevice", "")
+    target_lbl = choices.get("targetLabel") or target
+    grub = choices.get("grubDevice") or target
+    grub_lbl = choices.get("grubLabel") or grub
+    before = current_segments(target)
+    after = planned_segments(choices)
+
+    def bar_row(segs: list[dict]) -> str:
+        total = sum(max(int(s.get("size") or 0), 1) for s in segs) or 1
+        parts = []
+        x = 0.0
+        for seg in segs:
+            frac = max(int(seg.get("size") or 0), 1) / total
+            w = max(frac * 700.0, 4.0)
+            label = _qml_escape(str(seg.get("label") or ""))
+            color = seg.get("color") or COLOR_OTHER
+            txt_color = "#111827" if color == COLOR_EMPTY else "#ffffff"
+            show_txt = "true" if w >= 48 else "false"
+            parts.append(
+                "\n".join(
+                    [
+                        "        Rectangle {",
+                        f"            x: {x:.1f}; y: 0; width: {w - 1:.1f}; height: 40; radius: 5",
+                        f'            color: "{color}"; border.color: "#374151"',
+                        "            Text {",
+                        f"                anchors.centerIn: parent; visible: {show_txt}",
+                        f'                text: "{label}"; color: "{txt_color}"',
+                        "                font.bold: true; font.pixelSize: 12",
+                        "            }",
+                        "        }",
+                    ]
+                )
+            )
+            x += w
+        return "\n".join(parts)
+
+    def legend_html(segs: list[dict]) -> str:
+        lines = []
+        for seg in segs:
+            size_s = fmt_size(int(seg.get("size") or 0))
+            detail = seg.get("detail") or ""
+            lines.append(
+                f"• {_qml_escape(str(seg.get('label') or ''))} — {size_s}"
+                + (f" ({_qml_escape(detail)})" if detail else "")
+            )
+        return "<br/>".join(lines)
+
+    before_rects = bar_row(before)
+    after_rects = bar_row(after)
+
+    header_esc = (
+        "<h2>Riepilogo installazione</h2>"
+        "<p style=\\'color:#8a1f1f;\\'><b>Tutti i dati sul disco di installazione "
+        "verranno cancellati.</b> Controlla disco, schema partizioni e GRUB, "
+        "poi Avanti per confermare.</p>"
+        "<p><b>Software incluso</b> (tra gli altri): Mixxx, Ardour, REAPER, Audacity, "
+        "Audacious, Firefox, Fotoritocco — già nel sistema che stai installando.</p>"
+        f"<p><b>Disco di installazione</b><br/>{_qml_escape(target_lbl)}"
+        f"<br/><code>{_qml_escape(target)}</code></p>"
+        f"<p><b>GRUB (avvio) verrà scritto su</b><br/>{_qml_escape(grub_lbl)}"
+        f"<br/><code>{_qml_escape(grub)}</code></p>"
+    )
+    if grub != target:
+        header_esc += (
+            "<p style=\\'color:#8a1f1f;\\'><b>Attenzione:</b> GRUB è su un disco "
+            "diverso da quello su cui stiamo installando Quelo.</p>"
+        )
+
+    qml = "\n".join(
+        [
+            "import QtQuick 2.7",
+            "import QtQuick.Controls 2.2",
+            "import QtQuick.Layouts 1.3",
+            "import io.calamares.ui 1.0",
+            "",
+            "Item {",
+            "    width: 740",
+            "    height: 520",
+            "",
+            "    Flickable {",
+            "        anchors.fill: parent",
+            "        contentHeight: col.height + 24",
+            "        clip: true",
+            "        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }",
+            "",
+            "        Column {",
+            "            id: col",
+            "            width: parent.width - 16",
+            "            x: 8",
+            "            y: 8",
+            "            spacing: 10",
+            "",
+            "            Text {",
+            "                width: parent.width",
+            "                wrapMode: Text.WordWrap",
+            "                textFormat: Text.RichText",
+            f'                text: "{header_esc}"',
+            "            }",
+            "",
+            "            Text {",
+            "                width: parent.width",
+            '                text: "Partizioni ORA (prima)"',
+            "                font.bold: true",
+            "                font.pixelSize: 14",
+            "            }",
+            "            Item {",
+            "                width: 700; height: 44",
+            before_rects,
+            "            }",
+            "            Text {",
+            "                width: parent.width",
+            "                wrapMode: Text.WordWrap",
+            "                textFormat: Text.RichText",
+            f'                text: "{legend_html(before)}"',
+            "            }",
+            "",
+            "            Text {",
+            "                width: parent.width",
+            '                text: "Partizioni DOPO (schema Quelo)"',
+            "                font.bold: true",
+            "                font.pixelSize: 14",
+            "            }",
+            "            Item {",
+            "                width: 700; height: 44",
+            after_rects,
+            "            }",
+            "            Text {",
+            "                width: parent.width",
+            "                wrapMode: Text.WordWrap",
+            "                textFormat: Text.RichText",
+            f'                text: "{legend_html(after)}"',
+            "            }",
+            "        }",
+            "    }",
+            "}",
+            "",
+        ]
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(qml, encoding="utf-8")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Riepilogo installazione Quelo")
+    parser.add_argument(
+        "--write-qml",
+        action="store_true",
+        help="Solo genera il QML per Calamares notesqml (niente dialog)",
+    )
+    args = parser.parse_args()
+
+    choices = load_choices()
+    if not choices.get("targetDevice"):
+        print("Manca targetDevice in quelo-install-choices.yaml", file=sys.stderr)
+        return 1
+
+    write_qml(choices)
+
+    if args.write_qml:
+        print(f"QML scritto in {QML_OUT}")
+        return 0
+
+    app = QApplication(sys.argv)
+    win = RiepilogoWindow(choices)
+    win.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

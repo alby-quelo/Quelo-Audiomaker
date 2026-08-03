@@ -1,0 +1,77 @@
+#!/bin/bash
+# Wrapper Mixxx: libreria default = Musica su QUELO-HOME (live) o /media/HOME.
+set -euo pipefail
+
+quelo_mixxx_music_dir() {
+  # Live USB: QUELO-HOME → home/Musica  (icona HOME apre …/home)
+  if mountpoint -q /media/quelo-home 2>/dev/null \
+     || [[ -d /media/quelo-home/home ]]; then
+    printf '%s\n' "/media/quelo-home/home/Musica"
+    return 0
+  fi
+  # Installato con HOME exFAT
+  if mountpoint -q /media/HOME 2>/dev/null || [[ -d /media/HOME ]]; then
+    printf '%s\n' "/media/HOME/Musica"
+    return 0
+  fi
+  # Fallback home Unix
+  printf '%s\n' "${HOME}/Musica"
+}
+
+# Attendi montaggio QUELO-HOME (live: può arrivare dopo il login).
+if [[ -d /run/live ]] || grep -Eq '(^|[[:space:]])boot=live([[:space:]]|$)' /proc/cmdline 2>/dev/null; then
+  for _ in $(seq 1 30); do
+    if mountpoint -q /media/quelo-home 2>/dev/null || [[ -d /media/quelo-home/home ]]; then
+      break
+    fi
+    sleep 1
+  done
+fi
+
+MUSIC_DIR="$(quelo_mixxx_music_dir)"
+mkdir -p "${MUSIC_DIR}"
+
+export XDG_MUSIC_DIR="${MUSIC_DIR}"
+
+# Mixxx (Qt) legge QStandardPaths::MusicLocation da user-dirs, non solo env.
+mkdir -p "${HOME}/.config"
+USER_DIRS="${HOME}/.config/user-dirs.dirs"
+if [[ -f "${USER_DIRS}" ]]; then
+  if grep -q '^XDG_MUSIC_DIR=' "${USER_DIRS}" 2>/dev/null; then
+    sed -i "s|^XDG_MUSIC_DIR=.*|XDG_MUSIC_DIR=\"${MUSIC_DIR}\"|" "${USER_DIRS}"
+  else
+    printf 'XDG_MUSIC_DIR="%s"\n' "${MUSIC_DIR}" >>"${USER_DIRS}"
+  fi
+else
+  cat >"${USER_DIRS}" <<EOF
+XDG_DESKTOP_DIR="\$HOME/Desktop"
+XDG_DOWNLOAD_DIR="\$HOME/Scaricati"
+XDG_TEMPLATES_DIR="\$HOME/Modelli"
+XDG_PUBLICSHARE_DIR="\$HOME/Public"
+XDG_DOCUMENTS_DIR="\$HOME/Documenti"
+XDG_MUSIC_DIR="${MUSIC_DIR}"
+XDG_PICTURES_DIR="\$HOME/Immagini"
+XDG_VIDEOS_DIR="\$HOME/Video"
+EOF
+fi
+# Aggiorna cache xdg se disponibile (best-effort).
+if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+  XDG_MUSIC_DIR="${MUSIC_DIR}" xdg-user-dirs-update --set MUSIC "${MUSIC_DIR}" 2>/dev/null || true
+fi
+
+# Se il DB Mixxx esiste, registra la directory (e rimuovi path sbagliati tipici).
+MIXXX_DB="${HOME}/.mixxx/mixxxdb.sqlite"
+if [[ -f "${MIXXX_DB}" ]] && command -v sqlite3 >/dev/null 2>&1; then
+  if sqlite3 "${MIXXX_DB}" \
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='LibraryDirectories' LIMIT 1;" \
+      2>/dev/null | grep -q 1; then
+    sqlite3 "${MIXXX_DB}" \
+      "DELETE FROM LibraryDirectories WHERE directory IN ('${HOME}/Musica','${HOME}/Music','/root/Musica','/root/Music');" \
+      2>/dev/null || true
+    sqlite3 "${MIXXX_DB}" \
+      "INSERT OR IGNORE INTO LibraryDirectories (directory) VALUES ('${MUSIC_DIR//\'/\'\'}');" \
+      2>/dev/null || true
+  fi
+fi
+
+exec mixxx "$@"

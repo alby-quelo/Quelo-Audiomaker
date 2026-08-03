@@ -1,0 +1,50 @@
+#!/bin/bash
+# Invada Studio plugins: rimossi da Debian sid; installiamo i .deb di trixie
+# (stesso ABI libc/GTK tipicamente ok su sid attuale).
+set -euo pipefail
+
+LV2_VER="1.2.0+repack0-10"
+LADSPA_VER="0.3.1-7"
+BASE="https://deb.debian.org/debian/pool/main/i"
+LV2_DEB="invada-studio-plugins-lv2_${LV2_VER}_amd64.deb"
+LADSPA_DEB="invada-studio-plugins-ladspa_${LADSPA_VER}_amd64.deb"
+LV2_URL="${BASE}/invada-studio-plugins-lv2/${LV2_DEB}"
+LADSPA_URL="${BASE}/invada-studio-plugins/${LADSPA_DEB}"
+
+echo "quelo-invada: installazione da .deb trixie (lv2 ${LV2_VER}, ladspa ${LADSPA_VER})"
+
+TMP="$(mktemp -d)"
+cleanup() { rm -rf "${TMP}"; }
+trap cleanup EXIT
+
+download() {
+  local url="$1" dest="$2"
+  if command -v wget >/dev/null 2>&1; then
+    wget -q -O "${dest}" "${url}"
+  elif command -v curl >/dev/null 2>&1; then
+    curl -fsSL -o "${dest}" "${url}"
+  else
+    echo "quelo-invada: ERRORE manca wget/curl" >&2
+    exit 1
+  fi
+  [[ -s "${dest}" ]] || { echo "quelo-invada: ERRORE download vuoto: ${url}" >&2; exit 1; }
+}
+
+download "${LV2_URL}" "${TMP}/${LV2_DEB}"
+download "${LADSPA_URL}" "${TMP}/${LADSPA_DEB}"
+
+# Dipendenze runtime (GTK2 UI dei plugin LV2) da sid se mancanti
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y --no-install-recommends \
+  libgtk2.0-0t64 libcairo2 libgdk-pixbuf-2.0-0 \
+  >/dev/null
+
+dpkg -i "${TMP}/${LV2_DEB}" "${TMP}/${LADSPA_DEB}" \
+  || apt-get install -y -f --no-install-recommends
+
+dpkg -s invada-studio-plugins-lv2 >/dev/null 2>&1 \
+  || { echo "quelo-invada: ERRORE lv2 non installato" >&2; exit 1; }
+dpkg -s invada-studio-plugins-ladspa >/dev/null 2>&1 \
+  || { echo "quelo-invada: ERRORE ladspa non installato" >&2; exit 1; }
+
+echo "quelo-invada: OK (deb trixie su sid)"

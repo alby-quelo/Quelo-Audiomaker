@@ -1,0 +1,126 @@
+#!/bin/bash
+# Monta QUELO-HOME (exFAT) se presente; altrimenti home live normale su /root.
+#
+# CRITICO: niente "set -e" qui. Ogni comando a rischio (mount, ln, rm) e'
+# controllato ed eventualmente loggato a mano: uno step secondario che
+# fallisce (es. la sola icona Home sul Desktop) non deve piu' far marcare
+# l'intero servizio come FAILED se il montaggio vero e proprio e' riuscito.
+set -uo pipefail
+
+. /usr/local/bin/quelo-usb-lib.sh
+
+HOME_MNT="/media/quelo-home"
+DEFAULT_DIRS="Desktop Documenti Scaricati Immagini Musica Video Modelli"
+
+quelo_usbhome_log() {
+  logger -t quelo-usb-mount-home "$*" 2>/dev/null || true
+  echo "quelo-usb-mount-home: $*"
+}
+
+if ! blkid -L "${QUELO_HOME_LABEL}" >/dev/null 2>&1; then
+  quelo_usbhome_log "partizione ${QUELO_HOME_LABEL} non trovata, home resta su /root (tmpfs)"
+  exit 0
+fi
+
+mkdir -p "${HOME_MNT}"
+if ! mountpoint -q "${HOME_MNT}" 2>/dev/null; then
+  # exFAT: i permessi Unix sono simulati da fmask/dmask.
+  # fmask/dmask 0022 (NON 0000): i file non risultano world-writable.
+  # pcmanfm-qt rifiuta di fidarsi di .desktop world-writable → icona "!"
+  # e dialogo fiducia a ogni boot. Con 0022 + gio metadata::trust ok.
+  if ! mount -L "${QUELO_HOME_LABEL}" -o uid=0,gid=0,fmask=0022,dmask=0022 "${HOME_MNT}"; then
+    quelo_usbhome_log "ERRORE: mount di ${QUELO_HOME_LABEL} su ${HOME_MNT} fallito, home resta su /root"
+    exit 0
+  fi
+  quelo_usbhome_log "${QUELO_HOME_LABEL} montata su ${HOME_MNT}"
+else
+  quelo_usbhome_log "${HOME_MNT} era gia' montata"
+fi
+
+mkdir -p "${HOME_MNT}/home" "${HOME_MNT}/quelo-export"
+
+# Collegamento cartelle home (Desktop/Documenti/...) con SYMLINK, non
+# bind-mount (evita "dischi" fantasma in pcmanfm-qt/udisks2).
+link_errors=0
+for dir in ${DEFAULT_DIRS}; do
+  mkdir -p "${HOME_MNT}/home/${dir}"
+  target="/root/${dir}"
+  link_target="${HOME_MNT}/home/${dir}"
+  if [[ -L "${target}" && "$(readlink "${target}" 2>/dev/null)" == "${link_target}" ]]; then
+    continue
+  fi
+  if ! rm -rf "${target}" 2>/dev/null; then
+    quelo_usbhome_log "ATTENZIONE: non riesco a liberare ${target} per collegarlo a ${link_target}"
+    ((link_errors++))
+    continue
+  fi
+  if ! ln -s "${link_target}" "${target}" 2>/dev/null; then
+    quelo_usbhome_log "ATTENZIONE: creazione link ${target} -> ${link_target} fallita"
+    ((link_errors++))
+  fi
+done
+quelo_usbhome_log "cartelle home collegate a ${HOME_MNT}/home (${link_errors} errori su $(echo ${DEFAULT_DIRS} | wc -w))"
+
+# Icona HOME sul Desktop USB (exFAT: niente symlink).
+# Type=Link + chmod +x + gio metadata::trust true (chiave LXQt, non trusted).
+# quelo-home-label-fix.sh puo' riparare dopo l'avvio sessione (stesso trust).
+rm -f "${HOME_MNT}/home/Desktop/Home" \
+      "${HOME_MNT}/home/Desktop/Home.desktop" \
+      "${HOME_MNT}/home/Desktop/user-home.desktop" 2>/dev/null || true
+DESKTOP_ICON="${HOME_MNT}/home/Desktop/HOME.desktop"
+if cat >"${DESKTOP_ICON}" <<'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Link
+Name=HOME
+Comment=Cartella home (QUELO-HOME)
+Icon=user-home
+URL=file:///media/quelo-home/home
+EOF
+then
+  chmod a+x "${DESKTOP_ICON}" 2>/dev/null || true
+  # Trust subito dopo la scrittura (va rifatto ogni volta che il file e' ricreato).
+  if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+  fi
+  gio set "${DESKTOP_ICON}" metadata::trust true 2>/dev/null \
+    || quelo_usbhome_log "ATTENZIONE: gio metadata::trust non applicato (ok se sessione non ancora su)"
+else
+  quelo_usbhome_log "ATTENZIONE: scrittura HOME.desktop non riuscita"
+fi
+
+# Icona installer (il Desktop locale viene sostituito dal symlink qui sopra).
+INSTALL_SRC="/usr/share/applications/quelo-install.desktop"
+INSTALL_DST="${HOME_MNT}/home/Desktop/quelo-install.desktop"
+if [[ -f "${INSTALL_SRC}" ]]; then
+  if cp -a "${INSTALL_SRC}" "${INSTALL_DST}" 2>/dev/null; then
+    chmod a+x "${INSTALL_DST}" 2>/dev/null || true
+    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+    fi
+    gio set "${INSTALL_DST}" metadata::trust true 2>/dev/null || true
+    quelo_usbhome_log "icona installer su Desktop QUELO-HOME"
+  else
+    quelo_usbhome_log "ATTENZIONE: copia quelo-install.desktop fallita"
+  fi
+fi
+
+
+# Icona MANUALE PALINSESTO sul Desktop QUELO-HOME.
+MANUALE_SRC="/usr/share/applications/quelo-manuale-palinsesto.desktop"
+MANUALE_DST="${HOME_MNT}/home/Desktop/quelo-manuale-palinsesto.desktop"
+if [[ -f "${MANUALE_SRC}" ]]; then
+  if cp -a "${MANUALE_SRC}" "${MANUALE_DST}" 2>/dev/null; then
+    chmod a+x "${MANUALE_DST}" 2>/dev/null || true
+    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+    fi
+    gio set "${MANUALE_DST}" metadata::trust true 2>/dev/null || true
+    quelo_usbhome_log "icona manuale palinsesto su Desktop QUELO-HOME"
+  else
+    quelo_usbhome_log "ATTENZIONE: copia quelo-manuale-palinsesto.desktop fallita"
+  fi
+fi
+
+quelo_usbhome_log "completato con successo"
+exit 0

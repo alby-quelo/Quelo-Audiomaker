@@ -1,0 +1,45 @@
+# Build artifacts / cache
+.build/
+*.iso
+ISO/
+DOWNLOAD/
+.tmp-*/
+
+# Local unpack / packaging leftovers (not for git)
+calamares_*.tar.*
+calamares_*.dsc
+lxrandr_*.tar.*
+lxrandr_*.dsc
+lxrandr-0.3.3/
+
+# Automatic / manual source backups (huge; passo indietro locale)
+SOURCE_CODE/_backup_Quelo_audiomaker/
+SOURCE_CODE/_backup_Quelo_audiomaker_*/
+SOURCE_CODE/_fix_staging/
+_fix_staging/
+# Snapshot permanenti per release — non toccare, non in git
+SOURCE_CODE/[0-9].*/
+
+# Vendor / AppImage / binary downloads (regenerate at build time)
+SOURCE_CODE/Quelo_audiomaker/vendor/**/download/
+*.run
+*.AppImage
+*.deb
+
+# Python
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Host prepare-usb logs / temp
+USB_SOURCE_CODE/**/LOG*.txt
+USB_SOURCE_CODE/**/windows/LOG*.txt
+*.log
+
+# Editor / OS
+.DS_Store
+*~
+*.swp
+.idea/
+.vscode/
+__pycache__/

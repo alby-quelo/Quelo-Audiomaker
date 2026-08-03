@@ -1,0 +1,5 @@
+# Pacchetti BIOS legacy: SOLO sul pool ISO (non nella squashfs).
+# grub-pc confligge con grub-efi-amd64 già installato nella live;
+# Calamares su BIOS li installa da file:/run/live/medium (offline).
+grub-pc
+grub-pc-bin

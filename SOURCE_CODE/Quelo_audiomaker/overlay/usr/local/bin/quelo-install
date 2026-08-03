@@ -1,0 +1,52 @@
+#!/bin/bash
+# Avvia l'installer Quelo: layout disco → GRUB → riepilogo → Calamares.
+set -euo pipefail
+
+export QT_AUTO_SCREEN_SCALE_FACTOR="${QT_AUTO_SCREEN_SCALE_FACTOR:-1}"
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  exec pkexec "$0" "$@"
+fi
+
+if [[ -f /etc/fstab ]]; then
+  mv -f /etc/fstab /etc/fstab.orig.calamares
+  restore_fstab() { mv -f /etc/fstab.orig.calamares /etc/fstab 2>/dev/null || true; }
+  trap restore_fstab EXIT
+fi
+
+while true; do
+  if ! /usr/local/bin/quelo-calamares-disk-layout; then
+    echo "Installazione annullata (layout disco)." >&2
+    exit 1
+  fi
+
+  while true; do
+    set +e
+    /usr/local/bin/quelo-calamares-grub-confirm
+    grub_rc=$?
+    set -e
+    if [[ "$grub_rc" -eq 2 ]]; then
+      # Indietro → rifai layout
+      break
+    fi
+    if [[ "$grub_rc" -ne 0 ]]; then
+      echo "Installazione annullata (conferma GRUB)." >&2
+      exit 1
+    fi
+
+    set +e
+    /usr/local/bin/quelo-calamares-riepilogo
+    rie_rc=$?
+    set -e
+    if [[ "$rie_rc" -eq 0 ]]; then
+      # OK → Calamares (QML riepilogo già scritto)
+      exec calamares "$@"
+    fi
+    if [[ "$rie_rc" -eq 2 ]]; then
+      # Indietro → rifai conferma GRUB
+      continue
+    fi
+    echo "Installazione annullata (riepilogo)." >&2
+    exit 1
+  done
+done

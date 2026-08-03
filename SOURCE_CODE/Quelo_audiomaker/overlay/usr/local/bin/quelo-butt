@@ -1,0 +1,44 @@
+#!/bin/bash
+# BUTT (Broadcast Using This Tool) — AppImage upstream in /opt/BUTT.
+# Live (root) e installata (utente Calamares): prova FUSE, altrimenti extract.
+set -euo pipefail
+
+APP="/opt/BUTT/butt.AppImage"
+CACHE="${XDG_CACHE_HOME:-${HOME:-/root}/.cache}/quelo-butt"
+APPRUN="${CACHE}/squashfs-root/AppRun"
+
+if [[ ! -x "${APP}" ]]; then
+  echo "quelo-butt: AppImage assente (${APP})" >&2
+  exit 1
+fi
+
+# Live/X11: forza backend X11 di FLTK se Wayland fosse esposto per errore.
+export FLTK_BACKEND="${FLTK_BACKEND:-x11}"
+
+appimage_fuse_ok() {
+  # Il runtime stampa e fallisce se manca libfuse / /dev/fuse.
+  "${APP}" --appimage-version >/dev/null 2>&1
+}
+
+run_extracted() {
+  if [[ ! -x "${APPRUN}" ]]; then
+    echo "quelo-butt: FUSE non disponibile — estrazione in ${CACHE}" >&2
+    mkdir -p "${CACHE}"
+    rm -rf "${CACHE}/squashfs-root"
+    if ! ( cd "${CACHE}" && "${APP}" --appimage-extract >/dev/null ); then
+      echo "quelo-butt: extract fallito — provo APPIMAGE_EXTRACT_AND_RUN" >&2
+      exec env APPIMAGE_EXTRACT_AND_RUN=1 "${APP}" "$@"
+    fi
+    if [[ ! -x "${APPRUN}" ]]; then
+      echo "quelo-butt: AppRun assente dopo extract — provo APPIMAGE_EXTRACT_AND_RUN" >&2
+      exec env APPIMAGE_EXTRACT_AND_RUN=1 "${APP}" "$@"
+    fi
+  fi
+  exec "${APPRUN}" "$@"
+}
+
+if appimage_fuse_ok; then
+  exec "${APP}" "$@"
+fi
+
+run_extracted "$@"

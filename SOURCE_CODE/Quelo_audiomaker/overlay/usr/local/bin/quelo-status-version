@@ -1,0 +1,6 @@
+#!/bin/bash
+# Titolo completo nel pannello superiore (versione da /etc/quelo-audiomaker-version).
+set -euo pipefail
+
+version="$(tr -d '[:space:]' </etc/quelo-audiomaker-version 2>/dev/null || echo '?')"
+printf 'Quelo Audiomaker %s alpha' "${version}"

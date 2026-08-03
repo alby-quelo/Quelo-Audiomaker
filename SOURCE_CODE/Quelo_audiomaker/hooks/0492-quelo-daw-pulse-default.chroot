@@ -1,0 +1,97 @@
+#!/bin/bash
+# Default DAW → ALSA in esclusiva (Pulse sospeso via pasuspender nei wrapper).
+# Nota: nome file storico «pulse-default»; il comportamento è ALSA+pasuspender.
+# REAPER linux_audio_mode: 0=ALSA, 1=JACK, 2=PulseAudio, 3=Dummy — NON usare 1.
+set -euo pipefail
+
+seed_ardour_config() {
+  local dest_dir="$1"
+  local conf="${dest_dir}/config"
+  mkdir -p "${dest_dir}"
+
+  cat >"${conf}" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Quelo: preferenza ALSA. active=0 → al primo avvio scegli la scheda hw
+     (pasuspender in quelo-ardour rilascia Pulse così le schede compaiono). -->
+<Ardour>
+  <Config/>
+  <AudioMIDISetup>
+    <EngineStates>
+      <State backend="ALSA" driver="" device="" input-device="" output-device="" sample-rate="48000" buffer-size="256" n-periods="2" input-latency="0" output-latency="0" lm-input="" lm-output="" active="0" use-buffered-io="0" midi-option="None" lru="2147483647">
+        <MIDIDevices/>
+      </State>
+    </EngineStates>
+  </AudioMIDISetup>
+</Ardour>
+EOF
+  echo "quelo-daw-alsa: scritto ${conf}"
+}
+
+seed_reaper_ini() {
+  local ini="$1"
+  mkdir -p "$(dirname "${ini}")"
+  cat >"${ini}" <<'EOF'
+; Quelo Audiomaker — ALSA (linux_audio_mode=0). Pulse via quelo-reaper/pasuspender.
+; Attenzione: mode=1 è JACK (hang se jackd assente).
+[REAPER]
+linux_audio_mode=0
+linux_auto_pasuspend=0
+linux_audio_nch_in=2
+linux_audio_nch_out=2
+linux_audio_srate=48000
+linux_audio_bsize=512
+linux_audio_bufs=3
+linux_audio_bits=32
+linux_audio_srateor=1
+alsa_indev=
+alsa_outdev=
+jack_options=0
+jack_launchcmd=
+EOF
+  echo "quelo-daw-alsa: scritto ${ini}"
+}
+
+chmod 755 /usr/local/bin/quelo-ardour /usr/local/bin/quelo-reaper 2>/dev/null || true
+
+# Seed Ardour per ogni versione presente
+shopt -s nullglob
+ardour_vers=()
+for d in /etc/ardour[0-9]* /usr/lib/ardour[0-9]*; do
+  base="$(basename "${d}")"
+  [[ "${base}" =~ ^ardour[0-9]+$ ]] || continue
+  ardour_vers+=("${base}")
+done
+shopt -u nullglob
+
+if [[ ${#ardour_vers[@]} -eq 0 ]]; then
+  echo "quelo-daw-alsa: WARN nessun ardourN — skip seed Ardour"
+else
+  mapfile -t ardour_vers < <(printf '%s\n' "${ardour_vers[@]}" | sort -u)
+  for ver in "${ardour_vers[@]}"; do
+    seed_ardour_config "/root/.config/${ver}"
+    seed_ardour_config "/etc/skel/.config/${ver}"
+  done
+fi
+
+seed_reaper_ini /root/.config/REAPER/reaper.ini
+seed_reaper_ini /etc/skel/.config/REAPER/reaper.ini
+
+# Desktop stock Ardour → wrapper (pasuspender)
+shopt -s nullglob
+for desk in /usr/share/applications/ardour*.desktop \
+  /usr/share/applications/org.ardour.*.desktop \
+  /usr/share/applications/quelo-ardour.desktop; do
+  sed -i 's|^Exec=.*|Exec=quelo-ardour|' "${desk}" 2>/dev/null || true
+done
+shopt -u nullglob
+
+# pulseaudio-utils (pasuspender) — se manca, installa
+if ! command -v pasuspender >/dev/null 2>&1; then
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get install -y --no-install-recommends pulseaudio-utils >/dev/null
+fi
+
+command -v pasuspender >/dev/null 2>&1 \
+  || { echo "quelo-daw-alsa: ERRORE manca pasuspender" >&2; exit 1; }
+
+echo "quelo-daw-alsa: OK (ALSA mode=0 + pasuspender wrapper)"

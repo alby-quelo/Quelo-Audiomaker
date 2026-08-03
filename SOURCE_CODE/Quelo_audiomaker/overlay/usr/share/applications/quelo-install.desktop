@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Installa Quelo Audiomaker sul PC
+Name[it]=Installa Quelo Audiomaker sul PC
+GenericName=System Installer
+Comment=Installa Quelo Audiomaker sul disco interno del PC
+Exec=quelo-install
+Icon=/usr/share/quelo-audiomaker/logo.png
+Terminal=false
+Categories=Qt;System;Settings;
+Keywords=calamares;install;quelo;installer
+StartupWMClass=calamares
+StartupNotify=true

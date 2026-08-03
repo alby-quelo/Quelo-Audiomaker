@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Mixer Dj / Podcast
+Name[it]=Mixer Dj / Podcast
+GenericName=DJ / Podcast Mixer
+Comment=Avvia Mixxx (DJ set e podcast)
+Comment[it]=Avvia Mixxx (DJ set e podcast)
+Exec=quelo-mixxx
+Icon=/usr/share/quelo-audiomaker/mixxx-giradischi.png
+Terminal=false
+Categories=AudioVideo;Audio;Player;Midi;
+Keywords=mixxx;dj;podcast;mixer;audio;
+StartupNotify=true

@@ -1,0 +1,63 @@
+#!/bin/bash
+# REAPER (Cockos): tarball ufficiale Linux x86_64 → /opt/REAPER
+# Aggiornare REAPER_VER / REAPER_TAG quando esce una nuova release.
+set -euo pipefail
+
+REAPER_VER="7.78"
+REAPER_TAG="778"
+URL="https://www.reaper.fm/files/7.x/reaper${REAPER_TAG}_linux_x86_64.tar.xz"
+DEST="/opt/REAPER"
+
+echo "quelo-reaper: installazione REAPER ${REAPER_VER} da Cockos"
+
+TMP="$(mktemp -d)"
+cleanup() { rm -rf "${TMP}"; }
+trap cleanup EXIT
+
+ARCHIVE="${TMP}/reaper_linux_x86_64.tar.xz"
+if command -v wget >/dev/null 2>&1; then
+  wget -q -O "${ARCHIVE}" "${URL}"
+elif command -v curl >/dev/null 2>&1; then
+  curl -fsSL -o "${ARCHIVE}" "${URL}"
+else
+  echo "quelo-reaper: ERRORE manca wget/curl" >&2
+  exit 1
+fi
+
+[[ -s "${ARCHIVE}" ]] || { echo "quelo-reaper: ERRORE download vuoto" >&2; exit 1; }
+
+tar -xJf "${ARCHIVE}" -C "${TMP}"
+INST="${TMP}/reaper_linux_x86_64/install-reaper.sh"
+[[ -f "${INST}" ]] || { echo "quelo-reaper: ERRORE manca install-reaper.sh" >&2; exit 1; }
+chmod +x "${INST}"
+
+# Non-interattivo: /opt/REAPER + symlink /usr/local/bin/reaper
+# Niente desktop integration Cockos: usiamo le .desktop Quelo.
+"${INST}" --install /opt --usr-local-bin-symlink --quiet
+
+[[ -x "${DEST}/reaper" ]] || [[ -x /usr/local/bin/reaper ]] \
+  || { echo "quelo-reaper: ERRORE binario assente dopo install" >&2; exit 1; }
+
+chmod 755 /usr/local/bin/quelo-reaper 2>/dev/null || true
+
+# Icona hicolor (nome usato da alcuni temi / fallback)
+if [[ -f "${DEST}/Resources/main.png" ]] && command -v xdg-icon-resource >/dev/null 2>&1; then
+  xdg-icon-resource install --novendor --size 256 \
+    "${DEST}/Resources/main.png" cockos-reaper 2>/dev/null || true
+fi
+
+# Etichette .desktop stock Ardour (se presenti) + wrapper ALSA
+shopt -s nullglob
+for desk in /usr/share/applications/ardour*.desktop /usr/share/applications/org.ardour.*.desktop; do
+  sed -i \
+    -e 's/^Name=.*/Name=Ardour - Editor Audio Pro/' \
+    -e 's/^Name\[it\]=.*/Name[it]=Ardour - Editor Audio Pro/' \
+    -e 's|^Exec=.*|Exec=quelo-ardour|' \
+    "${desk}" 2>/dev/null || true
+  if ! grep -q '^Name\[it\]=' "${desk}" 2>/dev/null; then
+    echo 'Name[it]=Ardour - Editor Audio Pro' >>"${desk}"
+  fi
+done
+shopt -u nullglob
+
+echo "quelo-reaper: OK → ${DEST} (v${REAPER_VER})"

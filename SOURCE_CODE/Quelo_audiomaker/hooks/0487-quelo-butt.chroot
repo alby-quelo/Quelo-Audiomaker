@@ -1,0 +1,73 @@
+#!/bin/bash
+# BUTT: AppImage ufficiale da danielnoethen.de (più aggiornato del .deb Debian).
+# Aggiornare BUTT_VER / URL quando esce una nuova release.
+set -euo pipefail
+
+BUTT_VER="1.47.0"
+URL="https://danielnoethen.de/butt/release/${BUTT_VER}/butt-${BUTT_VER}-x86_64.AppImage"
+DEST_DIR="/opt/BUTT"
+APPIMAGE="${DEST_DIR}/butt.AppImage"
+
+echo "quelo-butt: installazione BUTT ${BUTT_VER} (AppImage upstream)"
+
+mkdir -p "${DEST_DIR}"
+TMP="$(mktemp -d)"
+cleanup() { rm -rf "${TMP}"; }
+trap cleanup EXIT
+
+ARCHIVE="${TMP}/butt.AppImage"
+if command -v wget >/dev/null 2>&1; then
+  wget -q -O "${ARCHIVE}" "${URL}"
+elif command -v curl >/dev/null 2>&1; then
+  curl -fsSL -o "${ARCHIVE}" "${URL}"
+else
+  echo "quelo-butt: ERRORE manca wget/curl" >&2
+  exit 1
+fi
+
+[[ -s "${ARCHIVE}" ]] || { echo "quelo-butt: ERRORE download vuoto" >&2; exit 1; }
+# ~60 MB attesi; rifiuta scarichi ridicoli
+sz=$(stat -c%s "${ARCHIVE}" 2>/dev/null || echo 0)
+if [[ "${sz}" -lt 1000000 ]]; then
+  echo "quelo-butt: ERRORE file troppo piccolo (${sz} byte)" >&2
+  exit 1
+fi
+
+install -m 755 "${ARCHIVE}" "${APPIMAGE}"
+chmod 755 /usr/local/bin/quelo-butt 2>/dev/null || true
+ln -sfn /usr/local/bin/quelo-butt /usr/local/bin/butt
+
+# .desktop Quelo (voce menu Openbox è separata)
+cat >/usr/share/applications/quelo-butt.desktop <<EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=STREAMING LIVE
+Name[it]=STREAMING LIVE
+GenericName=Audio streaming
+Comment=BUTT — streaming Icecast / Shoutcast / WebRTC
+Comment[it]=BUTT — streaming Icecast / Shoutcast / WebRTC
+Exec=quelo-butt
+Icon=butt
+Terminal=false
+Categories=AudioVideo;Audio;Network;
+Keywords=butt;streaming;icecast;shoutcast;live;
+StartupNotify=true
+EOF
+
+# Icona da AppImage se estraibile (best-effort)
+if command -v unsquashfs >/dev/null 2>&1 || "${APPIMAGE}" --appimage-help >/dev/null 2>&1; then
+  (
+    cd "${TMP}"
+    "${APPIMAGE}" --appimage-extract >/dev/null 2>&1 || true
+    icon="$(find "${TMP}/squashfs-root" -type f \( -name 'butt.png' -o -name '*256*.png' -o -name 'icon_256x256.png' \) 2>/dev/null | head -1 || true)"
+    if [[ -n "${icon}" && -f "${icon}" ]]; then
+      mkdir -p /usr/share/icons/hicolor/256x256/apps
+      cp -a "${icon}" /usr/share/icons/hicolor/256x256/apps/butt.png
+      gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+    fi
+  ) || true
+fi
+
+[[ -x "${APPIMAGE}" ]] || { echo "quelo-butt: ERRORE AppImage non eseguibile" >&2; exit 1; }
+echo "quelo-butt: OK → ${APPIMAGE} (v${BUTT_VER})"

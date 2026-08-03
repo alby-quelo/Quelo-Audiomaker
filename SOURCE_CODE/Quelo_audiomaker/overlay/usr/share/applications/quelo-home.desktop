@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=HOME
+Comment=Cartella home (QUELO-HOME)
+Exec=/usr/local/bin/quelo-filemanager
+Icon=user-home
+Terminal=false
+StartupNotify=true
+Categories=System;FileTools;FileManager;
+# Launcher di sistema (menu). Sul Desktop QUELO-HOME l'icona HOME e'
+# invece un Type=Link scritto da quelo-usb-mount-home / label-fix
+# (exFAT non supporta symlink; Link evita il dialogo fiducia).
+

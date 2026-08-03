@@ -1,0 +1,5 @@
+---
+type:       "job"
+name:       "quelo-partition-disk"
+interface:  "python"
+script:     "main.py"

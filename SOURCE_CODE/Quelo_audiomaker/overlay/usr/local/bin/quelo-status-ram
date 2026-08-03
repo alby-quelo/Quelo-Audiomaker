@@ -1,0 +1,20 @@
+#!/bin/bash
+# Stato RAM + SWAP/ZRAM per il pannello LXQt superiore.
+# Sempre: RAM usata X (swap U / T) / libera Y / totale Z
+# (anche con swap a 0: cosi' si vede che ZRAM e' attivo).
+set -euo pipefail
+
+mem_used="$(free -h | awk '/^Mem:/{print $3}')"
+mem_free="$(free -h | awk '/^Mem:/{print $4}')"
+mem_total="$(free -h | awk '/^Mem:/{print $2}')"
+swap_used="$(free -h | awk '/^Swap:/{print $3}')"
+swap_total="$(free -h | awk '/^Swap:/{print $2}')"
+
+# Se non c'e' swap (ZRAM non attivo), ometti il pezzo swap.
+if [[ -z "${swap_total}" || "${swap_total}" == "0B" || "${swap_total}" == "0" ]]; then
+  printf 'RAM usata %s / libera %s / totale %s' \
+    "${mem_used}" "${mem_free}" "${mem_total}"
+else
+  printf 'RAM usata %s (swap %s / %s) / libera %s / totale %s' \
+    "${mem_used}" "${swap_used}" "${swap_total}" "${mem_free}" "${mem_total}"
+fi

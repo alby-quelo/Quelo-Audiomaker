@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Quelo: sources.list finale allineato al codename dell'immagine (sid),
+# non "trixie" di calamares-settings-debian.
+#
+
+CHROOT=$(mount | grep proc | grep calamares | awk '{print $3}' | sed -e "s#/proc##g")
+
+RELEASE="sid"
+if [ -f "$CHROOT/etc/os-release" ]; then
+    # shellcheck disable=SC1090
+    RELEASE=$(. "$CHROOT/etc/os-release"; echo "${VERSION_CODENAME:-sid}")
+fi
+if [ -z "$RELEASE" ] || [ "$RELEASE" = "n/a" ]; then
+    RELEASE="sid"
+fi
+
+# Ripristina eventuali list salvati da sources-media (poi li riscriviamo).
+rm -f "$CHROOT/etc/apt/sources.list.calamares-save"
+rm -f "$CHROOT/etc/apt/sources.list.d/"*.calamares-save 2>/dev/null || true
+rm -f "$CHROOT/etc/apt/sources.list.d/debian-live-media.list"
+
+# sid/testing: niente -updates/-security stile stable.
+if [ "$RELEASE" = "sid" ] || [ "$RELEASE" = "unstable" ] || [ "$RELEASE" = "forky" ] || [ "$RELEASE" = "testing" ]; then
+    cat << EOF > "$CHROOT/etc/apt/sources.list"
+# Quelo Audiomaker — repository Debian ($RELEASE)
+deb http://deb.debian.org/debian $RELEASE main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian $RELEASE main contrib non-free non-free-firmware
+EOF
+else
+    cat << EOF > "$CHROOT/etc/apt/sources.list"
+# Quelo Audiomaker — repository Debian ($RELEASE)
+deb http://deb.debian.org/debian $RELEASE main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian $RELEASE main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian $RELEASE-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian $RELEASE-updates main contrib non-free non-free-firmware
+
+deb http://security.debian.org/debian-security $RELEASE-security main contrib non-free non-free-firmware
+deb-src http://security.debian.org/debian-security $RELEASE-security main contrib non-free non-free-firmware
+EOF
+fi
+
+exit 0

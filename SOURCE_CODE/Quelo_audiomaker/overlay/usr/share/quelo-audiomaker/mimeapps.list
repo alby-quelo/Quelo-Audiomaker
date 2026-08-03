@@ -1,0 +1,24 @@
+[Default Applications]
+text/plain=QUELO_MOUSEPAD_DESKTOP
+text/markdown=QUELO_MOUSEPAD_DESKTOP
+text/x-readme=QUELO_MOUSEPAD_DESKTOP
+text/x-changelog=QUELO_MOUSEPAD_DESKTOP
+application/pdf=org.pwmt.zathura.desktop
+text/html=quelo-firefox.desktop
+x-scheme-handler/http=quelo-firefox.desktop
+x-scheme-handler/https=quelo-firefox.desktop
+image/jpeg=lximage-qt.desktop
+image/png=lximage-qt.desktop
+image/gif=lximage-qt.desktop
+image/bmp=lximage-qt.desktop
+image/webp=lximage-qt.desktop
+image/tiff=lximage-qt.desktop
+image/svg+xml=lximage-qt.desktop
+image/x-icon=lximage-qt.desktop
+application/zip=xarchiver.desktop
+application/x-rar=xarchiver.desktop
+application/x-7z-compressed=xarchiver.desktop
+application/x-tar=xarchiver.desktop
+application/gzip=xarchiver.desktop
+application/x-bzip2=xarchiver.desktop
+application/x-xz=xarchiver.desktop

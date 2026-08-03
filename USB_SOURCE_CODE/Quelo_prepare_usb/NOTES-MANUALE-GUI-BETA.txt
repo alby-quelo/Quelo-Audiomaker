@@ -1,0 +1,7 @@
+Quelo Office — prepare-usb GUI
+================================
+
+Questa nota è stata incorporata in NOTES-MANUALE.txt (sezione A).
+La GUI è pubblicata dalla release 0.71-alpha.
+
+Vedi anche CHANGELOG.TXT nel repository.

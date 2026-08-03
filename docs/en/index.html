@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quelo Audiomaker — live USB audio studio</title>
+  <meta name="description" content="Quelo Audiomaker 0.08-alpha: installable live Linux from USB. Portable audio studio: REAPER, Ardour, Mixxx, Quelo-palinsesto-radio, selective live session save/restore.">
+  <meta name="keywords" content="Quelo Audiomaker, live USB, Debian, audio, REAPER, Ardour, Mixxx, radio schedule, Calamares">
+  <meta name="author" content="Alberto Frosio">
+  <meta name="theme-color" content="#1a1a1a">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Quelo Audiomaker">
+  <meta property="og:url" content="https://alby-quelo.github.io/Quelo-Audiomaker/en/">
+  <meta property="og:title" content="Quelo Audiomaker 0.08-alpha — live USB audio studio">
+  <meta property="og:description" content="Portable audio studio on USB: live and installable, session save/restore, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio. Debian sid + LXQt.">
+  <meta property="og:image" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
+  <meta property="og:image:alt" content="Quelo Audiomaker desktop wallpaper">
+  <meta property="og:image:width" content="1920">
+  <meta property="og:image:height" content="1080">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="it_IT">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Quelo Audiomaker 0.08-alpha — live USB audio studio">
+  <meta name="twitter:description" content="Portable audio studio on USB: live and installable, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio.">
+  <meta name="twitter:image" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
+  <meta name="twitter:image:alt" content="Quelo Audiomaker desktop wallpaper">
+  <link rel="canonical" href="https://alby-quelo.github.io/Quelo-Audiomaker/en/">
+  <link rel="stylesheet" href="../style.css?v=5">
+  <link rel="icon" href="../logo.png" type="image/png">
+</head>
+<body>
+  <header>
+    <nav class="nav">
+      <a class="brand" href="./">
+        <img src="../logo.png" alt="Quelo Audiomaker">
+        <span>Quelo Audiomaker</span>
+      </a>
+      <div class="nav-links">
+        <a href="#what">What it is for</a>
+        <a href="#whats-new">What’s new 0.08</a>
+        <a href="#features">Features</a>
+        <a href="#roadmap">In progress</a>
+        <a href="#iso-parts">ISO download</a>
+        <a href="#prepare-usb">prepare-usb</a>
+        <a href="https://github.com/alby-quelo/Quelo-Audiomaker">GitHub</a>
+      </div>
+      <div class="lang"><a href="../">IT</a> · <strong>EN</strong></div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="pitch">
+        Record, edit and convert audio without installing anything on the host PC.<br>
+        Quelo Audiomaker is a fast live USB: audio tools ready, files on QUELO-HOME,<br>
+        selective config save when you need it.<br>
+        For You Who Meow in the Dark!
+      </p>
+      <div class="badges">
+        <span class="badge">0.08-alpha</span>
+        <span class="badge">Debian sid</span>
+        <span class="badge">LXQt + Openbox</span>
+        <span class="badge">CC BY-NC 4.0</span>
+      </div>
+      <h1>Quelo Audiomaker</h1>
+      <p class="tagline">
+        A small portable audio production studio on a USB stick — Italian locale, ready on almost any PC.
+        Inspired by Corrado Guzzanti’s «Quelo» and derived from <strong>Quelo Office</strong>:
+        <strong>Debian GNU/Linux</strong> reliability + lightweight <strong>LXQt + Openbox</strong>,
+        with tools for recording, editing and mixing audio.
+      </p>
+
+      <div class="hero-frame">
+        <img class="hero-shot" src="../quelo-sfondo-audiomaker.png" alt="Quelo Audiomaker desktop wallpaper" width="1920" height="1080">
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
+          Download full ISO 0.08-alpha
+        </a>
+        <a class="btn btn-primary" href="#iso-parts">
+          GitHub parts / instructions
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker">
+          Source code
+        </a>
+      </div>
+    </section>
+
+    <section id="what">
+      <h2>What it is for</h2>
+      <p>Quelo Audiomaker is aimed at people who want to:</p>
+      <ul>
+        <li>carry an <strong>audio toolkit</strong> (editor, player, conversion/codecs);</li>
+        <li>work on <strong>multiple PCs</strong> with the same USB stick, without touching internal disks;</li>
+        <li>keep <strong>personal files and media readable on Windows and macOS</strong> (exFAT home partition);</li>
+        <li><strong>install</strong> Quelo Audiomaker on a disk (internal or external) with Calamares;</li>
+        <li>save <strong>only the settings that matter</strong> (network, printers, desktop, audio, display, Firefox, Audacity, Audacious, Mixxx…), without turning the live system into an opaque installation.</li>
+      </ul>
+    </section>
+
+        <section id="whats-new">
+      <h2>What’s new in 0.08-alpha</h2>
+      <p style="color:var(--text-muted)">
+        First public Quelo Audiomaker release. The changelog stays empty until formal publication.
+      </p>
+      <ul>
+        <li><strong>Live audio studio:</strong> Mixxx (DJ set / podcast), Audacity, Audacious, FFmpeg, PulseAudio.</li>
+        <li><strong>Audio firmware</strong> for many laptop/USB cards (SOF, Intel sound, Cirrus, UCM).</li>
+        <li><strong>Calamares installer</strong> (disk / partitions / HOME exFAT or ext4 wizards).</li>
+        <li><strong>Installed system:</strong> login with <strong>LightDM</strong>; live and installed stay separate.</li>
+        <li>Desktop with <strong>Mixer Dj / Podcast</strong> icon; fixed Openbox menu.
+          How-to: <a href="https://github.com/alby-quelo/Quelo-Audiomaker/blob/main/HOW-TO-menu-config.txt">HOW-TO-menu-config.txt</a>.</li>
+      </ul>
+    </section>
+
+    <section id="features">
+      <h2>Main features</h2>
+
+      <h3>System and desktop</h3>
+      <ul>
+        <li>Based on <strong>Debian sid</strong> (live-build), <strong>Italian</strong> locale, <strong>Europe/Rome</strong> timezone.</li>
+        <li><strong>Live:</strong> boots straight to the desktop (autologin, <strong>startx</strong>, <strong>LXQt</strong> + <strong>Openbox</strong>).</li>
+        <li><strong>Installed:</strong> login with <strong>LightDM</strong>.</li>
+        <li><strong>Calamares</strong> installer from the live menu.</li>
+        <li>Custom application menu (fixed). How-to: <a href="https://github.com/alby-quelo/Quelo-Audiomaker/blob/main/HOW-TO-menu-config.txt">HOW-TO-menu-config.txt</a>.</li>
+        <li>GRUB menu branded <strong>Quelo Audiomaker</strong> (including multi-kernel: <code>Quelo-Audiomaker, kernel …</code>).</li>
+        <li><strong>Two LXQt panels</strong>: top — version / RAM (+ ZRAM swap) / home space / clock; bottom — menu, taskbar, network, Bluetooth, <strong>battery/AC</strong>, volume, trash, power.</li>
+        <li>Desktop <strong>HOME</strong> icon to QUELO-HOME.</li>
+        <li>Custom Quelo menu; adjustable fonts for menu and bottom panel.</li>
+        <li>Display layout via <strong>lxrandr</strong> (<code>quelo-lxrandr</code> wrapper).</li>
+      </ul>
+
+      <h3>Memory</h3>
+      <ul>
+        <li><strong>ZRAM</strong>: about <strong>50% of RAM</strong>, <strong>lz4</strong> compression, no swap file on the USB stick.</li>
+        <li><strong>stress-ng</strong> included for load tests.</li>
+      </ul>
+
+      <h3>Included applications</h3>
+      <div class="card">
+        <table>
+          <thead><tr><th>Area</th><th>Software</th></tr></thead>
+          <tbody>
+            <tr><td>DJ / podcast</td><td>Mixxx (menu and Desktop icon)</td></tr>
+            <tr><td>Editing / recording</td><td>Audacity</td></tr>
+            <tr><td>Player</td><td>Audacious</td></tr>
+            <tr><td>Conversion / codecs</td><td>FFmpeg</td></tr>
+            <tr><td>Web</td><td>Firefox ESR (Italian)</td></tr>
+            <tr><td>Text / PDF</td><td>Mousepad, Zathura</td></tr>
+            <tr><td>Images</td><td>lximage-qt, mtPaint (photo edit)</td></tr>
+            <tr><td>Files</td><td>pcmanfm-qt</td></tr>
+            <tr><td>Utilities</td><td>lxterminal, Xarchiver, SMB4K, screenshot</td></tr>
+            <tr><td>Print / scan</td><td>CUPS (Gutenprint + HP), Simple Scan</td></tr>
+            <tr><td>Network</td><td>NetworkManager, Wi‑Fi/LAN firmware, mobile broadband</td></tr>
+            <tr><td>Bluetooth</td><td>Blueman</td></tr>
+            <tr><td>Power</td><td>lxqt-powermanagement (battery with %)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Display drivers: <strong>NVIDIA</strong> (<code>nvidia-driver</code>) and <strong>AMD</strong> firmware (<code>firmware-amd-graphics</code>) where needed for the screen.
+      </p>
+
+      <h3>Hardware and connectivity</h3>
+      <ul>
+        <li>Broad <strong>network firmware</strong> coverage.</li>
+        <li><strong>Printers</strong> over network and USB (Avahi/mDNS, ipp-usb; Gutenprint and HP drivers).</li>
+        <li><strong>Scanners</strong> via SANE (including airscan).</li>
+        <li><strong>Bluetooth</strong> panel applet.</li>
+        <li><strong>Battery / AC</strong> in the tray.</li>
+        <li><strong>Network shares</strong> (Samba/CIFS) via SMB4K.</li>
+      </ul>
+
+      <h3>Live behaviour</h3>
+      <ul>
+        <li>Every boot starts from a <strong>clean ISO image</strong> (no automatic Debian-style overlay on <code>/usr</code>).</li>
+        <li>Caches and temp data in <strong>RAM</strong>.</li>
+        <li><strong>Selective session save</strong>: network, printers, Bluetooth, desktop, audio, display, Firefox, <strong>Audacity, Audacious, Mixxx</strong>, power management.</li>
+        <li>User data and media on the <strong>QUELO-HOME</strong> <strong>exFAT</strong> partition, auto-mounted.</li>
+      </ul>
+
+      <h3>Recommended RAM</h3>
+      <div class="card">
+        <table>
+          <thead><tr><th>Use</th><th>RAM</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Desktop + audio editing</td><td><strong>4&nbsp;GB+</strong></td><td>Workable; 8&nbsp;GB better</td></tr>
+            <tr><td>Medium projects / multi-track</td><td><strong>8&nbsp;GB+</strong></td><td>Recommended</td></tr>
+            <tr><td>Heavy sessions / many plugins</td><td><strong>16&nbsp;GB+</strong></td><td>More headroom</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>USB stick:</strong> <strong>USB&nbsp;3 or newer</strong> and
+        <strong>64&nbsp;GB or more</strong> recommended, so you have enough room on the same stick
+        for files, media and projects (QUELO-HOME partition).
+      </p>
+      <p>ZRAM (<strong>50% of RAM</strong>, <strong>lz4</strong>, swappiness 30) helps low-RAM machines.</p>
+
+      <h3>USB stick layout</h3>
+      <p>After preparation with prepare-usb (same scheme as Quelo Office):</p>
+      <pre>┌─────────────────────────────────────────────────────────┐
+│  Partitions 1–2  │  Live ISO (read-only at boot)        │
+├──────────────────┼──────────────────────────────────────┤
+│  Partition 3     │  ext4 «persistence» — Linux config   │
+│                  │  (invisible to Windows/macOS)        │
+├──────────────────┼──────────────────────────────────────┤
+│  Partition 4     │  exFAT «QUELO-HOME» — your files     │
+│                  │  (readable everywhere)               │
+└─────────────────────────────────────────────────────────┘</pre>
+    </section>
+
+        <section id="roadmap">
+      <h2>In progress</h2>
+      <ul>
+        <li>Install <strong>alongside other operating systems</strong> and <strong>custom partitioning</strong>.</li>
+      </ul>
+    </section>
+
+    <section id="iso-parts">
+      <h2>Download ISO</h2>
+      <div class="card" style="text-align:left">
+        <h3 style="margin-top:0">Full ISO (recommended)</h3>
+        <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
+          One ready file, no joining required.
+          Mirror: <code>click2all.org</code>.
+        </p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
+            Download full ISO 0.08-alpha
+          </a>
+        </div>
+
+        <h3 style="margin-top:1.5rem">Or: 1) Download the 2 parts from GitHub</h3>
+        <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
+          GitHub rejects files over 2&nbsp;GB, so the ISO (~2.3&nbsp;GB) is split into 2 parts.
+          Download <strong>both</strong> into the <strong>same folder</strong>
+          (sha256 is optional — only to verify integrity).
+          Release:
+          <a href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha">0.08-alpha</a>.
+        </p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.part00">1 · part00</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.part01">2 · part01</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.sha256">sha256 (opt.)</a>
+        </div>
+
+        <h3 style="margin-top:1.25rem">2) Join the parts → get the ISO</h3>
+        <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
+          Needed <strong>only</strong> if you downloaded the 2 GitHub parts (not the full mirror ISO).
+          Pick <strong>one</strong> method. Easiest: download the script for your OS into the <strong>same folder</strong> as the 2 parts.
+        </p>
+
+        <p style="margin:0 0 0.5rem;font-size:0.95rem"><strong>Method A — script (recommended)</strong></p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap;gap:0.5rem">
+          <a class="btn btn-primary" href="../JOIN-ISO-0.08-alpha.bat" download="JOIN-ISO-0.08-alpha.bat">Download .bat (Windows)</a>
+          <a class="btn btn-primary" href="../JOIN-ISO-0.08-alpha.sh" download="JOIN-ISO-0.08-alpha.sh">Download .sh (Linux)</a>
+        </div>
+        <ul style="margin:0.75rem 0 0;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
+          <li><strong>Windows:</strong> double-click <code>JOIN-ISO-0.08-alpha.bat</code>. If a warning appears, choose “More info” → “Run anyway”.</li>
+          <li><strong>Linux:</strong> open a terminal in the folder and run:
+            <code>bash JOIN-ISO-0.08-alpha.sh</code></li>
+          <li>When finished you get <code>Quelo-Audiomaker-0.08-alpha.iso</code>.</li>
+        </ul>
+
+        <p style="margin:1rem 0 0.5rem;font-size:0.95rem"><strong>Method B — one terminal command</strong></p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">
+          Open a terminal <em>in the folder</em> with the 2 parts, then paste <strong>one</strong> of these lines:
+        </p>
+        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Windows (Command Prompt):</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso</pre>
+        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Linux / macOS:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0">cat Quelo-Audiomaker-0.08-alpha.iso.part* &gt; Quelo-Audiomaker-0.08-alpha.iso</pre>
+      </div>
+    </section>
+
+    <section id="prepare-usb">
+      <h2>prepare-usb (USB preparation)</h2>
+      <div class="card" style="text-align:left">
+        <p style="margin:0 0 0.75rem">
+          Once you have the ISO, prepare the stick <strong>from the host PC</strong>
+          (never from the live system booted from the same USB).
+        </p>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted)">
+          prepare-usb writes the ISO and creates
+          <code>persistence</code> + <code>QUELO-HOME</code> (same layout as Quelo Office / Videomaker — scripts already suitable).
+        </p>
+        <h3 style="margin-top:1rem">Linux — GUI (from the repo)</h3>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cd USB_SOURCE_CODE/Quelo_prepare_usb
+./prepare-usb-gui.sh</pre>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted);font-size:0.9rem">
+          Host prerequisites (Debian/Ubuntu):
+          <code>sudo apt install python3 python3-tk e2fsprogs exfatprogs util-linux polkit-1</code>
+        </p>
+        <h3 style="margin-top:1rem">Windows — GUI (from Quelo Office 0.71)</h3>
+        <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
+          Same partition layout, compatible with this ISO:
+        </p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.zip">ZIP</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.rar">RAR</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.tar">TAR</a>
+        </div>
+        <ul style="margin:0.75rem 0 0;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
+          <li>Extract, run the GUI as administrator.</li>
+          <li>Choose <code>Quelo-Audiomaker-0.08-alpha.iso</code>, the USB stick and persistence size; confirm with <code>SI SCRIVI</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+<section>
+      <h2>Disclaimer and license</h2>
+      <p>
+        Quelo Audiomaker is provided «as is», without warranty of any kind.
+        It is intended for <strong>educational and experimental</strong> use; use at your own risk.
+      </p>
+
+      <p>
+        Original Quelo Audiomaker work: <strong>CC BY-NC 4.0</strong> — Alberto Frosio
+        (<a href="mailto:alby@gnumerica.org">alby@gnumerica.org</a>).
+        See
+        <a href="https://github.com/alby-quelo/Quelo-Audiomaker/blob/main/LICENSE.TXT">LICENSE.TXT</a>
+        and
+        <a href="https://github.com/alby-quelo/Quelo-Audiomaker/blob/main/CREDITS.TXT">CREDITS.TXT</a>.
+      </p>
+    </section>
+
+    <section id="download">
+      <h2>Download</h2>
+      <p style="color:var(--text-muted)">
+        Read the instructions above first (ISO reassembly and prepare-usb), then download:
+      </p>
+      <div class="cta-row" style="justify-content:flex-start">
+        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
+          Download full ISO 0.08-alpha
+        </a>
+        <a class="btn btn-primary" href="#iso-parts">
+          GitHub parts / instructions
+        </a>
+        <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker">
+          Source code
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Quelo Audiomaker · <a href="https://github.com/alby-quelo/Quelo-Audiomaker">GitHub</a> · <a href="../">Italiano</a></p>
+  </footer>
+</body>
+</html>

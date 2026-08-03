@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=REAPER - Editor Audio Pro
+Name[it]=REAPER - Editor Audio Pro
+GenericName=DAW
+Comment=REAPER — digital audio workstation (Cockos)
+Comment[it]=REAPER — digital audio workstation (Cockos)
+Exec=quelo-reaper
+Icon=/opt/REAPER/Resources/main.png
+Terminal=false
+Categories=AudioVideo;Audio;Midi;Sequencer;
+Keywords=reaper;daw;audio;editor;
+StartupNotify=true

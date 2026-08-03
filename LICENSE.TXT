@@ -1,0 +1,525 @@
+Quelo Audiomaker — License / Licenza
+====================================
+
+Copyright (c) 2026 — Alberto Frosio
+
+Elenco terze parti aggiornato alla release 0.08-alpha.
+
+
+================================================================================
+ITALIANO
+================================================================================
+
+Licenza del lavoro originale (Quelo Audiomaker)
+----------------------------------------------
+Il materiale originale di questo progetto — inclusi, a titolo esemplificativo:
+script, configurazioni, overlay, hook di build, menu, temi, documentazione,
+marchio/nome «Quelo Audiomaker», ISO così assemblata, wizard Calamares Quelo
+(quelo-calamares-disk-layout, quelo-calamares-grub-confirm,
+quelo-calamares-riepilogo), convertitore audio Quelo (quelo-audio-converter),
+palinsesto radio Quelo (quelo-palinsesto-radio),
+manuale utente palinsesto (`manuale_palinsesto.pdf`),
+script post-install Calamares Quelo, branding GRUB
+del sistema installato, e ogni parte non coperta dalle licenze elencate sotto —
+è rilasciato sotto:
+
+  Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+
+Testo completo (IT):
+  https://creativecommons.org/licenses/by-nc/4.0/legalcode.it
+
+Testo completo (EN):
+  https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+In sintesi, per il lavoro originale Quelo Audiomaker:
+
+  • Uso non commerciale e didattico — consentito, a condizione di citare
+    il progetto nei credits e in ogni documentazione sulle licenze.
+
+  • Uso commerciale — NON consentito senza autorizzazione scritta preventiva
+    di Alberto Frosio, anche se si utilizza solo una parte del materiale
+    (script, configurazione, ISO, branding, ecc.).
+
+  • Attribuzione — chi ridistribuisce o modifica il materiale originale deve
+    indicare la fonte, il link alla licenza CC BY-NC 4.0 e se sono state
+    apportate modifiche.
+
+  • Contatto per uso commerciale — richiedere esplicitamente l’autorizzazione
+    a Alberto Frosio (alby@gnumerica.org) prima di qualsiasi uso a scopo
+    commerciale o lucrativo.
+
+Nota: la presente licenza si applica al lavoro creato dal progetto Quelo
+Audiomaker. Non sostituisce né limita le licenze dei software di terze parti
+inclusi nell’ISO (elencati sotto), che restano governati dai rispettivi
+titolari.
+
+
+Licenze software e componenti di terze parti
+---------------------------------------------
+L’ISO Quelo Audiomaker integra Debian GNU/Linux e numerosi programmi di terze
+parti. Ciascuno resta soggetto alla propria licenza. L’elenco seguente è
+fornito in buona fede per trasparenza; in caso di dubbio prevalgono i metadati
+Debian (/usr/share/doc/*/copyright) e i testi ufficiali dei singoli progetti.
+
+Sistema base e build
+  Debian GNU/Linux (sid)              → DFSG / licenze miste (main, contrib,
+                                        non-free, non-free-firmware)
+  live-build, live-boot, live-config → GPL v2+
+  systemd, systemd-timesyncd          → LGPL v2.1+
+  systemd-zram-generator              → MIT (zram-generator / systemd)
+  GNU GRUB                            → GPL v3
+  grub-efi, grub-efi-amd64 (-bin,
+    -unsigned)                        → GPL v3 (UEFI; nella squashfs)
+  grub-pc, grub-pc-bin                → GPL v3 (BIOS legacy; solo pool ISO,
+                                        non co-installati con grub-efi)
+  efibootmgr                          → GPL v2+
+  Python 3, python3-pil (Pillow)      → PSF License / HPND
+  python3-pyqt6 (PyQt6)               → GPL v3 (Riverbank; binding Qt 6;
+                                        usato anche da quelo-audio-converter
+                                        e quelo-palinsesto-radio)
+  python3-gi / PyGObject              → LGPL v2.1+ (player GStreamer
+                                        quelo-palinsesto-radio)
+  sqlite3                             → Public Domain
+                                        (anche DB Quelo-palinsesto-radio:
+                                        .palinsesto.db)
+  tzdata                              → Public Domain
+  stress-ng                           → GPL v2+
+  squashfs-tools (unsquashfs)         → GPL v2+ (unpackfs Calamares sulla live)
+  sudo                                → ISC License (visudo / sudoers)
+
+Installer su disco e display manager
+  Calamares                           → GPL v3+
+  calamares-settings-debian           → GPL v3+ / licenze Debian Live
+                                        (impostazioni; personalizzate da Quelo)
+  LightDM                             → GPL v3+
+  lightdm-gtk-greeter                 → GPL v3+
+  parted                              → GPL v3+
+  gdisk (GPT fdisk / sgdisk)          → GPL v2+
+  dosfstools                          → GPL v3+
+  qt6-l10n-tools                      → LGPL v3 / GPL v2+ / GPL v3
+                                        (solo in chroot build per .ts IT;
+                                         poi rimosso dall’ISO)
+
+Firmware di rete e GPU (sezione non-free-firmware)
+  firmware-iwlwifi, firmware-realtek, firmware-brcm80211,
+  firmware-mediatek, firmware-libertas, firmware-marvell-prestera,
+  firmware-ti-connectivity, firmware-bnx2, firmware-bnx2x,
+  firmware-netxen, firmware-qlogic, firmware-myricom,
+  firmware-cavium, firmware-netronome, firmware-misc-nonfree,
+  firmware-amd-graphics
+                                      → licenze proprietarie dei rispettivi
+                                        vendor (vedi pacchetti Debian)
+
+Firmware e profili audio
+  firmware-sof-signed                 → licenza Intel SOF / non-free-firmware
+  firmware-intel-sound                → non-free-firmware (Intel SST/HDA)
+  firmware-cirrus                     → non-free-firmware (Cirrus Logic)
+  alsa-ucm-conf                       → BSD-style (ALSA UCM)
+  alsa-firmware-loaders               → GPL v2+ / varie
+  midisport-firmware                  → licenza firmware Midisport
+  madfuload                           → GPL v2+ (loader firmware M-Audio)
+  fxload                              → GPL v2+ (loader firmware USB FX2)
+  dfu-util                            → GPL v2+ (USB DFU)
+  firmware-linux-free                 → GPL / licenze free dei blob
+                                        (vedi copyright Debian)
+
+Rete e connettività
+  NetworkManager, network-manager-applet → GPL v2+
+  wpasupplicant, iw                   → GPL v2+ / BSD
+  ModemManager, usb-modeswitch        → GPL v2+
+  dbus-x11                            → GPL v2+ / Academic Free License v2.1
+  avahi-daemon, libnss-mdns           → LGPL v2.1+
+
+Ambiente grafico e desktop
+  X.Org (xorg, driver video/input)    → MIT / licenze miste (X11)
+  Openbox                             → GPL v2+
+  LXQt (lxqt-core e componenti)       → LGPL v2.1+
+  lxqt-config, lxqt-config-l10n       → LGPL v2.1+
+  lxqt-powermanagement,
+  lxqt-powermanagement-l10n           → LGPL v2.1+
+  upower                              → GPL v2+
+  lxrandr                             → GPL v2+
+  lxterminal                          → GPL v2+
+  x11-utils, xdotool                  → varie (MIT / GPL v3 / BSD)
+  pcmanfm-qt, libfm-qt                → GPL v2+
+  pcmanfm-qt-l10n, libfm-qt-l10n      → GPL v2+
+  lximage-qt, lximage-qt-l10n         → GPL v2+
+  gvfs, gvfs-backends                 → LGPL v2.1+
+  breeze-icon-theme                   → LGPL v3 / GPL v3
+  Qt 6 / qt6-translations-l10n        → LGPL v3 / GPL v2+ / GPL v3
+                                        (licenza Qt Company)
+
+Audio (produzione e riproduzione)
+  Mixxx                               → GPL v2+
+  BUTT (AppImage upstream,
+    danielnoethen.de)                 → GPL v2+ (Daniel Nöthen;
+                                        non il pacchetto Debian)
+  MediaInfo, mediainfo-gui            → BSD-2-Clause / vedi copyright Debian
+                                        (MediaArea)
+  Ardour                              → GPL v2+
+  REAPER (Cockos)                     → licenza proprietaria Cockos
+                                        (valutazione; uso oltre i termini
+                                         richiede licenza commerciale)
+  Audacity                            → GPL v3+
+  Audacious                           → GPL v2+ / BSD
+  FFmpeg / libavcodec-extra           → LGPL v2.1+ / GPL v2+ (config Debian)
+  GStreamer (base/good/bad/ugly/libav)→ LGPL v2.1+ / GPL v2+ (plugin)
+  gstreamer1.0-pulseaudio             → LGPL (pulsesrc/pulsesink; usato da
+                                        quelo-palinsesto-radio per play/LIVE)
+  gstreamer1.0-plugins-bad            → LGPL/GPL (curlhttpsrc per slot LINK)
+  libcurl / curl                      → MIT/curl (trasporto HTTP(S) stream LINK)
+  glib-networking                     → LGPL v2.1+ (TLS GIO; altri programmi)
+  gstreamer1.0-fdkaac, libfdk-aac     → Fraunhofer FDK (non-free) / GPL
+  faac, faad, aac-enc, fdkaac         → GPL / non-free (Debian)
+  lame, twolame, mpg123               → LGPL v2+ / GPL v2+
+  flac, vorbis-tools, opus-tools,
+  wavpack, musepack-tools, sox        → BSD / GPL (vedi pacchetti Debian)
+  LSP, Calf, x42, Zam, Dragonfly,
+  SWH, MDA, DPF, EQ10Q, Rubber Band,
+  Invada (lv2/ladspa, deb trixie),
+  synthv1/samplv1/drumkv1/padthv1,
+  amsynth, hexter, Guitarix,
+  AVLDrums, DrumGizmo, FluidSynth     → GPL / LGPL (suite plugin Debian;
+                                        Invada da pacchetti trixie se assenti
+                                        in sid)
+  fluid-soundfont-gm                  → MIT-like / vedi copyright Debian
+  PulseAudio, pavucontrol             → GPL v2+ / LGPL v2.1+
+  pulseaudio-module-bluetooth         → GPL v2+
+  alsa-utils, libasound2-plugins,
+  alsa-scarlett-gui, alsa-tools,
+  alsa-tools-gui                      → GPL v2+ / LGPL v2.1+
+                                        (Focusrite GUI; hdspmixer/hdspconf;
+                                         envy24control; altre utilità ALSA)
+  libffado2, ffado-tools,
+  ffado-dbus-server, ffado-mixer-qt4  → GPL v2+ / LGPL v2.1+
+                                        (stack FireWire audio FFADO;
+                                         senza JACK in questa ISO)
+  Wizard / script Calamares Quelo
+    (disk-layout, grub-confirm,
+     riepilogo, post-install,
+     branding GRUB installato)        → CC BY-NC 4.0 (lavoro originale Quelo;
+                                        Calamares/PyQt6 restano sotto le
+                                        rispettive licenze)
+
+Display / GPU (driver schermo)
+  nvidia-driver                       → licenza proprietaria NVIDIA
+                                        (pacchetti non-free Debian)
+  firmware-amd-graphics               → Firmware-Zlib / non-free-firmware
+  libglu1-mesa                        → SGI FreeB / MIT
+  fuse3, libfuse2t64                  → GPL v2 / LGPL v2.1+
+
+Altre applicazioni
+  Mozilla Firefox ESR, firefox-esr-l10n-it → MPL v2
+  Mousepad                            → GPL v2+
+  mtPaint                             → GPL v3+
+  Zathura                             → zlib License
+  zathura-pdf-poppler / Poppler       → GPL v2
+  kdialog                             → GPL v2+
+  Xarchiver                           → GPL v2+
+  SMB4K                               → GPL v2+
+  Simple Scan                         → GPL v2+
+  scrot                               → GPL v2+
+  zenity                              → LGPL v2.1+
+
+Stampa e scanner
+  CUPS, cups-client                   → GPL v2+ / Apache License 2.0
+  ipp-usb                             → MIT / Apache License 2.0
+  SANE (sane-utils, sane-airscan)     → GPL v2+
+  printer-driver-gutenprint           → GPL v2+
+  printer-driver-hpcups               → MIT / GPL v2+ (HP)
+
+Bluetooth
+  BlueZ                               → GPL v2+
+  Blueman                             → GPL v2+
+  gir1.2-ayatanaappindicator3-0.1     → LGPL v2.1+ / GPL v3
+
+Archivi e filesystem
+  zip, unzip                          → Info-ZIP License (BSD-like)
+  p7zip-full                          → LGPL v2.1+ (7-Zip)
+  unrar                               → licenza proprietaria RARLAB
+                                        (pacchetto non-free Debian)
+  exfatprogs                          → GPL v2+
+  cifs-utils                          → GPL v3
+
+Font
+  ttf-mscorefonts-installer           → Microsoft End-User License Agreement
+                                        (EULA proprietaria; Arial, Times,
+                                         Verdana, Courier, ecc.)
+
+prepare-usb GUI Windows (pacchetto host)
+  Python 3.9.13 Win32 (offline)       → PSF License
+  Tcl/Tk (con Python Win32 / tkinter) → Tcl/Tk License (BSD-style)
+  e2fsprogs / mke2fs.exe              → GPL v2
+  Cygwin x86 (DLL per mke2fs)         → GPL v3+ (runtime Cygwin)
+  GPT fdisk — sgdisk32.exe            → GPL v2
+  FATtools (exFAT in-place)           → GPL v3
+  diskpart, PowerShell, mountvol      → componenti proprietari Microsoft Windows
+                                        (già presenti sul sistema host; non
+                                         sostituiti dalla licenza Quelo Audiomaker)
+
+Altri
+  console-setup, kbd, locales         → GPL v2+ / varie (Debian)
+  libssl3                             → Apache License 2.0 (OpenSSL)
+
+Per l’elenco aggiornato dei pacchetti installati nell’ISO, vedere
+SOURCE_CODE/Quelo_audiomaker/packages/extra.list.chroot,
+SOURCE_CODE/Quelo_audiomaker/packages/grub-bios.list.binary
+e i metadati Debian.
+
+
+================================================================================
+ENGLISH
+================================================================================
+
+License for original work (Quelo Audiomaker)
+--------------------------------------------
+Original material in this project — including but not limited to: scripts,
+configuration, overlay, build hooks, menus, themes, documentation, the
+«Quelo Audiomaker» name/branding, the assembled ISO, Quelo Calamares wizards
+(quelo-calamares-disk-layout, quelo-calamares-grub-confirm,
+quelo-calamares-riepilogo), Quelo audio converter (quelo-audio-converter),
+Quelo radio schedule player (quelo-palinsesto-radio),
+palinsesto user manual (`manuale_palinsesto.pdf`),
+Quelo Calamares post-install scripts, installed-system
+GRUB branding, and any part not covered by the licenses listed below — is
+released under:
+
+  Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+
+Full legal code (EN):
+  https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Full legal code (IT):
+  https://creativecommons.org/licenses/by-nc/4.0/legalcode.it
+
+Summary for original Quelo Audiomaker material:
+
+  • Non-commercial and educational use — allowed, provided the project is
+    credited in credits and in all license documentation.
+
+  • Commercial use — NOT allowed without prior written authorization from
+    Alberto Frosio, even if only part of the material is used (scripts,
+    configuration, ISO, branding, etc.).
+
+  • Attribution — redistributors and modifiers must credit the source, link
+    to CC BY-NC 4.0, and note any changes made.
+
+  • Commercial licensing — contact Alberto Frosio (alby@gnumerica.org)
+    explicitly before any commercial or for-profit use.
+
+Note: this license applies to work created by the Quelo Audiomaker project.
+It does not replace or limit third-party software licenses included in the
+ISO (listed below), which remain governed by their respective owners.
+
+
+Third-party software and component licenses
+-------------------------------------------
+The Quelo Audiomaker ISO includes Debian GNU/Linux and many third-party
+programs. Each remains subject to its own license. The list below is provided
+in good faith for transparency; in case of doubt, Debian metadata
+(/usr/share/doc/*/copyright) and official project texts prevail.
+
+Base system and build
+  Debian GNU/Linux (sid)              → DFSG / mixed licenses (main, contrib,
+                                        non-free, non-free-firmware)
+  live-build, live-boot, live-config  → GPL v2+
+  systemd, systemd-timesyncd          → LGPL v2.1+
+  systemd-zram-generator              → MIT (zram-generator / systemd)
+  GNU GRUB                            → GPL v3
+  grub-efi, grub-efi-amd64 (-bin,
+    -unsigned)                        → GPL v3 (UEFI; in the squashfs)
+  grub-pc, grub-pc-bin                → GPL v3 (legacy BIOS; ISO pool only,
+                                        not co-installed with grub-efi)
+  efibootmgr                          → GPL v2+
+  Python 3, python3-pil (Pillow)      → PSF License / HPND
+  python3-pyqt6 (PyQt6)               → GPL v3 (Riverbank; Qt 6 bindings;
+                                        also used by quelo-audio-converter
+                                        and quelo-palinsesto-radio)
+  python3-gi / PyGObject              → LGPL v2.1+ (GStreamer player for
+                                        quelo-palinsesto-radio)
+  sqlite3                             → Public Domain
+                                        (also Quelo-palinsesto-radio DB:
+                                        .palinsesto.db)
+  tzdata                              → Public Domain
+  stress-ng                           → GPL v2+
+  squashfs-tools (unsquashfs)         → GPL v2+ (Calamares unpackfs on live)
+  sudo                                → ISC License (visudo / sudoers)
+
+Installer and display manager
+  Calamares                           → GPL v3+
+  calamares-settings-debian           → GPL v3+ / Debian Live licenses
+                                        (settings; customized by Quelo)
+  LightDM                             → GPL v3+
+  lightdm-gtk-greeter                 → GPL v3+
+  parted                              → GPL v3+
+  gdisk (GPT fdisk / sgdisk)          → GPL v2+
+  dosfstools                          → GPL v3+
+  qt6-l10n-tools                      → LGPL v3 / GPL v2+ / GPL v3
+                                        (chroot build only for IT .ts;
+                                         removed from the final ISO)
+
+Network and GPU firmware (non-free-firmware)
+  firmware-iwlwifi, firmware-realtek, firmware-brcm80211,
+  firmware-mediatek, firmware-libertas, firmware-marvell-prestera,
+  firmware-ti-connectivity, firmware-bnx2, firmware-bnx2x,
+  firmware-netxen, firmware-qlogic, firmware-myricom,
+  firmware-cavium, firmware-netronome, firmware-misc-nonfree,
+  firmware-amd-graphics
+                                      → proprietary vendor licenses (see
+                                        Debian packages)
+
+Audio firmware and profiles
+  firmware-sof-signed                 → Intel SOF / non-free-firmware
+  firmware-intel-sound                → non-free-firmware (Intel SST/HDA)
+  firmware-cirrus                     → non-free-firmware (Cirrus Logic)
+  alsa-ucm-conf                       → BSD-style (ALSA UCM)
+  alsa-firmware-loaders               → GPL v2+ / various
+  midisport-firmware                  → Midisport firmware license
+  madfuload                           → GPL v2+ (M-Audio firmware loader)
+  fxload                              → GPL v2+ (USB FX2 firmware loader)
+  dfu-util                            → GPL v2+ (USB DFU)
+  firmware-linux-free                 → GPL / free blob licenses
+                                        (see Debian copyright)
+
+Networking and connectivity
+  NetworkManager, network-manager-applet → GPL v2+
+  wpasupplicant, iw                   → GPL v2+ / BSD
+  ModemManager, usb-modeswitch        → GPL v2+
+  dbus-x11                            → GPL v2+ / Academic Free License v2.1
+  avahi-daemon, libnss-mdns           → LGPL v2.1+
+
+Graphical environment and desktop
+  X.Org (xorg, video/input drivers)   → MIT / mixed (X11)
+  Openbox                             → GPL v2+
+  LXQt (lxqt-core and components)     → LGPL v2.1+
+  lxqt-config, lxqt-config-l10n       → LGPL v2.1+
+  lxqt-powermanagement,
+  lxqt-powermanagement-l10n           → LGPL v2.1+
+  upower                              → GPL v2+
+  lxrandr                             → GPL v2+
+  lxterminal                          → GPL v2+
+  x11-utils, xdotool                  → various (MIT / GPL v3 / BSD)
+  pcmanfm-qt, libfm-qt                → GPL v2+
+  pcmanfm-qt-l10n, libfm-qt-l10n      → GPL v2+
+  lximage-qt, lximage-qt-l10n         → GPL v2+
+  gvfs, gvfs-backends                 → LGPL v2.1+
+  breeze-icon-theme                   → LGPL v3 / GPL v3
+  Qt 6 / qt6-translations-l10n        → LGPL v3 / GPL v2+ / GPL v3
+                                        (Qt Company license)
+
+Audio (production and playback)
+  Mixxx                               → GPL v2+
+  BUTT (upstream AppImage,
+    danielnoethen.de)                 → GPL v2+ (Daniel Nöthen;
+                                        not the Debian package)
+  MediaInfo, mediainfo-gui            → BSD-2-Clause / see Debian copyright
+                                        (MediaArea)
+  Ardour                              → GPL v2+
+  REAPER (Cockos)                     → Cockos proprietary license
+                                        (evaluation; commercial license
+                                         required beyond evaluation terms)
+  Audacity                            → GPL v3+
+  Audacious                           → GPL v2+ / BSD
+  FFmpeg / libavcodec-extra           → LGPL v2.1+ / GPL v2+ (Debian build)
+  GStreamer (base/good/bad/ugly/libav)→ LGPL v2.1+ / GPL v2+ (plugins)
+  gstreamer1.0-pulseaudio             → LGPL (pulsesrc/pulsesink; used by
+                                        quelo-palinsesto-radio for play/LIVE)
+  gstreamer1.0-plugins-bad            → LGPL/GPL (curlhttpsrc for LINK slots)
+  libcurl / curl                      → MIT/curl (HTTP(S) transport for LINK)
+  glib-networking                     → LGPL v2.1+ (GIO TLS; other programs)
+  gstreamer1.0-fdkaac, libfdk-aac     → Fraunhofer FDK (non-free) / GPL
+  faac, faad, aac-enc, fdkaac         → GPL / non-free (Debian)
+  lame, twolame, mpg123               → LGPL v2+ / GPL v2+
+  flac, vorbis-tools, opus-tools,
+  wavpack, musepack-tools, sox        → BSD / GPL (see Debian packages)
+  LSP, Calf, x42, Zam, Dragonfly,
+  SWH, MDA, DPF, EQ10Q, Rubber Band,
+  Invada (lv2/ladspa, trixie debs),
+  synthv1/samplv1/drumkv1/padthv1,
+  amsynth, hexter, Guitarix,
+  AVLDrums, DrumGizmo, FluidSynth     → GPL / LGPL (Debian plugin suites;
+                                        Invada from trixie packages if
+                                        missing in sid)
+  fluid-soundfont-gm                  → MIT-like / see Debian copyright
+  PulseAudio, pavucontrol             → GPL v2+ / LGPL v2.1+
+  pulseaudio-module-bluetooth         → GPL v2+
+  alsa-utils, libasound2-plugins,
+  alsa-scarlett-gui, alsa-tools,
+  alsa-tools-gui                      → GPL v2+ / LGPL v2.1+
+                                        (Focusrite GUI; hdspmixer/hdspconf;
+                                         envy24control; other ALSA tools)
+  libffado2, ffado-tools,
+  ffado-dbus-server, ffado-mixer-qt4  → GPL v2+ / LGPL v2.1+
+                                        (FFADO FireWire audio stack;
+                                         no JACK in this ISO)
+  Quelo Calamares wizards / scripts
+    (disk-layout, grub-confirm,
+     summary, post-install,
+     installed GRUB branding)         → CC BY-NC 4.0 (Quelo original work;
+                                        Calamares/PyQt6 remain under their
+                                        respective licenses)
+
+Display / GPU (screen drivers)
+  nvidia-driver                       → proprietary NVIDIA license
+                                        (Debian non-free packages)
+  firmware-amd-graphics               → Firmware-Zlib / non-free-firmware
+  libglu1-mesa                        → SGI FreeB / MIT
+  fuse3, libfuse2t64                  → GPL v2 / LGPL v2.1+
+
+Other applications
+  Mozilla Firefox ESR, firefox-esr-l10n-it → MPL v2
+  Mousepad                            → GPL v2+
+  mtPaint                             → GPL v3+
+  Zathura                             → zlib License
+  zathura-pdf-poppler / Poppler       → GPL v2
+  kdialog                             → GPL v2+
+  Xarchiver                           → GPL v2+
+  SMB4K                               → GPL v2+
+  Simple Scan                         → GPL v2+
+  scrot                               → GPL v2+
+  zenity                              → LGPL v2.1+
+
+Printing and scanning
+  CUPS, cups-client                   → GPL v2+ / Apache License 2.0
+  ipp-usb                             → MIT / Apache License 2.0
+  SANE (sane-utils, sane-airscan)     → GPL v2+
+  printer-driver-gutenprint           → GPL v2+
+  printer-driver-hpcups               → MIT / GPL v2+ (HP)
+
+Bluetooth
+  BlueZ                               → GPL v2+
+  Blueman                             → GPL v2+
+  gir1.2-ayatanaappindicator3-0.1     → LGPL v2.1+ / GPL v3
+
+Archives and filesystems
+  zip, unzip                          → Info-ZIP License (BSD-like)
+  p7zip-full                          → LGPL v2.1+ (7-Zip)
+  unrar                               → RARLAB proprietary license
+                                        (Debian non-free package)
+  exfatprogs                          → GPL v2+
+  cifs-utils                          → GPL v3
+
+Fonts
+  ttf-mscorefonts-installer           → Microsoft End-User License Agreement
+                                        (proprietary EULA; Arial, Times,
+                                         Verdana, Courier, etc.)
+
+prepare-usb GUI Windows (host package)
+  Python 3.9.13 Win32 (offline)       → PSF License
+  Tcl/Tk (with Python Win32 / tkinter) → Tcl/Tk License (BSD-style)
+  e2fsprogs / mke2fs.exe              → GPL v2
+  Cygwin x86 (DLLs for mke2fs)        → GPL v3+ (Cygwin runtime)
+  GPT fdisk — sgdisk32.exe            → GPL v2
+  FATtools (in-place exFAT)           → GPL v3
+  diskpart, PowerShell, mountvol      → proprietary Microsoft Windows components
+                                        (already on the host OS; not replaced by
+                                         the Quelo Audiomaker license)
+
+Other
+  console-setup, kbd, locales         → GPL v2+ / various (Debian)
+  libssl3                             → Apache License 2.0 (OpenSSL)
+
+For the current list of packages installed in the ISO, see
+SOURCE_CODE/Quelo_audiomaker/packages/extra.list.chroot,
+SOURCE_CODE/Quelo_audiomaker/packages/grub-bios.list.binary
+and Debian metadata.

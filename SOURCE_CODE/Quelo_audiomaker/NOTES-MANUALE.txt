@@ -1,0 +1,32 @@
+Quelo Audiomaker — build ISO (Quelo_audiomaker)
+========================================
+
+Comandi (dalla root del repository quelo-audiomaker):
+
+  sudo SOURCE_CODE/Quelo_audiomaker/build.sh
+  sudo SOURCE_CODE/Quelo_audiomaker/cleanup.sh
+
+Output ISO (tutte le release restano qui, nessuna cancellazione automatica):
+  ISO/Quelo-Audiomaker-<versione>-alpha.iso
+  Esempio prima release: ISO/Quelo-Audiomaker-0.01-alpha.iso
+
+Backup sorgenti (UNO solo, sostituito a ogni build):
+  SOURCE_CODE/_backup_Quelo_audiomaker/
+  Serve per un passo indietro sul codice. Cancellarlo solo su richiesta esplicita.
+
+Rollback se una release "rompe" la distro:
+  L'utente dice "NON FUNZIONA" e cosa non va.
+  Allora: cancellare la ISO non funzionante, ripristinare i sorgenti dal
+  backup precedente, mantenere la ISO (e il source) funzionante di prima.
+
+Versione corrente (da usare per la prossima build):
+  SOURCE_CODE/Quelo_audiomaker/VERSION
+  Dopo ogni build riuscita la versione viene incrementata di 0.01.
+
+Installer Calamares (su disco):
+  Documentazione: SOURCE_CODE/Quelo_audiomaker/docs/CALAMARES.md
+  Voce menu live: "Installa Quelo Audiomaker" → quelo-install
+  Prima di Calamares: wizard layout disco (40 GiB min / 80 GiB consigliati).
+  Aggiornare etc/calamares/quelo-sizes.conf e branding.desc (version)
+  se cambiano footprint o numero di release.
+  NON toccare SOURCE_CODE/0.11/ (snapshot permanente).

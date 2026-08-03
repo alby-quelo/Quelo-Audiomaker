@@ -1,0 +1,22 @@
+#!/bin/bash
+# Assicura gruppo audio + pam_limits (i valori stanno in
+# /etc/security/limits.d/99-quelo-audio.conf dall'overlay).
+set -euo pipefail
+
+getent group audio >/dev/null 2>&1 || groupadd -r audio 2>/dev/null || true
+# Live: root nel gruppo audio (oltre alle righe «root» in limits.d)
+usermod -aG audio root 2>/dev/null || true
+
+# Debian: pam_limits di solito è già in common-session; se manca, aggiungilo.
+PAM="/etc/pam.d/common-session"
+if [[ -f "${PAM}" ]] && ! grep -qE '^\s*session\s+required\s+pam_limits\.so' "${PAM}"; then
+  printf '\n# Quelo Audiomaker: applica /etc/security/limits.d/*\nsession\trequired\tpam_limits.so\n' >>"${PAM}"
+  echo "quelo-audio-limits: aggiunto pam_limits.so a ${PAM}"
+else
+  echo "quelo-audio-limits: pam_limits già presente (o ${PAM} assente)"
+fi
+
+[[ -f /etc/security/limits.d/99-quelo-audio.conf ]] \
+  || { echo "quelo-audio-limits: ERRORE manca 99-quelo-audio.conf" >&2; exit 1; }
+
+echo "quelo-audio-limits: OK"

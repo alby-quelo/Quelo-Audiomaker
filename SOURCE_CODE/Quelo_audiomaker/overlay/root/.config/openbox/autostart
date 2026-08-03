@@ -1,0 +1,38 @@
+xsetroot -solid '#111111'
+
+# Icona HOME sul Desktop (Type=Link su QUELO-HOME; ripara race/timeout).
+/usr/local/bin/quelo-home-label-fix.sh &
+
+# Icona installer sul Desktop (+ trust). Loop lungo: Desktop può passare a QUELO-HOME.
+/usr/local/bin/quelo-desktop-install-icon.sh &
+
+# Icona Mixxx sul Desktop (giradischi) — live: Desktop può passare a QUELO-HOME.
+/usr/local/bin/quelo-desktop-mixxx-icon.sh &
+
+# Icona MANUALE PALINSESTO sul Desktop (+ trust / QUELO-HOME).
+/usr/local/bin/quelo-desktop-manuale-icon.sh &
+
+# Tolgie il badge "!" da tutte le .desktop sul Desktop (HOME + Cestino).
+# Deve girare in sessione (D-Bus): il trust gvfs non sopravvive al reboot live.
+/usr/local/bin/quelo-trust-desktop-icons.sh &
+
+# Muro invisibile per il cursore del mouse al confine del pannello
+# superiore (vedi hooks/0410-quelo-pointer-barrier.chroot): impedisce
+# alle finestre di finire sotto la barra superiore quando vengono
+# ridimensionate/spostate a mano.
+/usr/local/bin/quelo-pointer-barrier &
+
+# Icona nel tray per gestione Bluetooth (pairing/condivisione): compare
+# nel plugin [tray]/[statusnotifier] del pannello inferiore.
+blueman-applet &
+
+# Batteria / AC: icona nel tray (statusnotifier). Dipende da upower
+# (non mascherare upower.service). Click destro → Configura apre
+# lxqt-config-powermanagement (gestione energia).
+lxqt-powermanagement &
+
+# Caratteri pannello salvati (~/.config/quelo/) → tema utente lxqt.
+/usr/local/bin/quelo-font-apply-at-start &
+
+# Ripristino sessione al boot: attende pannello LXQt + 2 s (vedi autostart script).
+/usr/local/bin/quelo-load-sessione-gui-autostart.sh &

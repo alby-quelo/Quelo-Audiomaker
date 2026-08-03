@@ -1,0 +1,6 @@
+# AUTO-GENERATED metadata — job opzionale (scelte già scritte dal wizard PyQt).
+---
+type:       "job"
+name:       "quelo-apply-layout"
+interface:  "python"
+script:     "main.py"

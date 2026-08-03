@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Quelo — trust icone Desktop
+Comment=Rimuove il badge ! da HOME e Cestino (metadata::trust + reload PCManFM)
+Exec=/usr/local/bin/quelo-trust-desktop-icons.sh
+Terminal=false
+NoDisplay=true
+OnlyShowIn=LXQt;
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=2

@@ -1,0 +1,559 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Quelo Audio Converter — GUI semplice: qualsiasi input multimediale → solo audio."""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QFont
+from PyQt6.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QComboBox,
+    QFileDialog,
+    QFormLayout,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+# codec_id → (estensione, ffmpeg audio args builder needs bitrate?)
+CODECS = [
+    ("MP3", "mp3", True),
+    ("AAC", "m4a", True),
+    ("Ogg Vorbis", "ogg", True),
+    ("Opus", "opus", True),
+    ("FLAC", "flac", False),
+    ("WAV (PCM)", "wav", False),
+]
+
+SAMPLE_RATES = ["22050", "44100", "48000", "96000"]
+BITRATES = ["64", "96", "128", "160", "192", "256", "320"]
+
+
+def which(cmd: str) -> str | None:
+    return shutil.which(cmd)
+
+
+def probe_file(path: Path) -> dict:
+    """Restituisce info leggibili via ffprobe (fallback mediainfo)."""
+    info = {
+        "name": path.name,
+        "format": "?",
+        "channels": "?",
+        "rate": "?",
+        "bitrate": "?",
+        "duration": "?",
+        "has_audio": False,
+        "is_video": False,
+    }
+    ffprobe = which("ffprobe")
+    if ffprobe:
+        try:
+            raw = subprocess.check_output(
+                [
+                    ffprobe,
+                    "-v",
+                    "quiet",
+                    "-print_format",
+                    "json",
+                    "-show_format",
+                    "-show_streams",
+                    str(path),
+                ],
+                text=True,
+                timeout=60,
+            )
+            data = json.loads(raw)
+        except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+            data = {}
+        fmt = data.get("format") or {}
+        streams = data.get("streams") or []
+        astreams = [s for s in streams if s.get("codec_type") == "audio"]
+        vstreams = [s for s in streams if s.get("codec_type") == "video"]
+        info["is_video"] = bool(vstreams)
+        info["has_audio"] = bool(astreams)
+        fmt_name = (fmt.get("format_long_name") or fmt.get("format_name") or "?").split(",")[0]
+        info["format"] = fmt_name.strip()
+        if astreams:
+            a = astreams[0]
+            ch = a.get("channels")
+            layout = a.get("channel_layout") or ""
+            if ch == 1 or layout == "mono":
+                info["channels"] = "Mono"
+            elif ch == 2 or "stereo" in layout:
+                info["channels"] = "Stereo"
+            elif ch:
+                info["channels"] = f"{ch} ch"
+            rate = a.get("sample_rate")
+            if rate:
+                info["rate"] = f"{rate} Hz"
+            br = a.get("bit_rate") or fmt.get("bit_rate")
+            if br:
+                try:
+                    info["bitrate"] = f"{int(int(br) / 1000)} kb/s"
+                except (TypeError, ValueError):
+                    info["bitrate"] = str(br)
+            codec = a.get("codec_name")
+            if codec:
+                info["format"] = f"{fmt_name} / {codec}"
+        dur = fmt.get("duration")
+        if dur:
+            try:
+                sec = float(dur)
+                m, s = divmod(int(sec), 60)
+                h, m = divmod(m, 60)
+                info["duration"] = f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+            except ValueError:
+                pass
+        return info
+
+    # Fallback mediainfo CLI
+    mi = which("mediainfo")
+    if mi:
+        try:
+            gen = subprocess.check_output(
+                [
+                    mi,
+                    "--Inform=General;%Format%|%Duration/String3%|%OverallBitRate/String%",
+                    str(path),
+                ],
+                text=True,
+                timeout=60,
+            ).strip()
+            aud = subprocess.check_output(
+                [
+                    mi,
+                    "--Inform=Audio;%Format%|%Channels%|%SamplingRate/String%|%BitRate/String%",
+                    str(path),
+                ],
+                text=True,
+                timeout=60,
+            ).strip()
+            if gen:
+                parts = gen.split("|")
+                info["format"] = parts[0] or "?"
+                if len(parts) > 1 and parts[1]:
+                    info["duration"] = parts[1]
+                if len(parts) > 2 and parts[2]:
+                    info["bitrate"] = parts[2]
+            if aud:
+                info["has_audio"] = True
+                ap = aud.split("|")
+                if ap and ap[0]:
+                    info["format"] = f"{info['format']} / {ap[0]}"
+                if len(ap) > 1 and ap[1]:
+                    info["channels"] = (
+                        "Mono"
+                        if ap[1] == "1"
+                        else ("Stereo" if ap[1] == "2" else f"{ap[1]} ch")
+                    )
+                if len(ap) > 2 and ap[2]:
+                    info["rate"] = ap[2]
+                if len(ap) > 3 and ap[3]:
+                    info["bitrate"] = ap[3]
+        except (subprocess.SubprocessError, OSError):
+            pass
+    return info
+
+
+def build_ffmpeg_cmd(
+    src: Path,
+    dst: Path,
+    *,
+    codec_label: str,
+    channels: int,
+    sample_rate: str,
+    bitrate: str,
+) -> list[str]:
+    ffmpeg = which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("ffmpeg non trovato")
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i",
+        str(src),
+        "-vn",  # solo audio (anche da video)
+        "-ac",
+        str(channels),
+        "-ar",
+        sample_rate,
+    ]
+    if codec_label == "MP3":
+        cmd += ["-c:a", "libmp3lame", "-b:a", f"{bitrate}k"]
+    elif codec_label == "AAC":
+        cmd += ["-c:a", "aac", "-b:a", f"{bitrate}k"]
+    elif codec_label == "Ogg Vorbis":
+        cmd += ["-c:a", "libvorbis", "-b:a", f"{bitrate}k"]
+    elif codec_label == "Opus":
+        cmd += ["-c:a", "libopus", "-b:a", f"{bitrate}k"]
+    elif codec_label == "FLAC":
+        cmd += ["-c:a", "flac"]
+    elif codec_label == "WAV (PCM)":
+        cmd += ["-c:a", "pcm_s16le"]
+    else:
+        cmd += ["-c:a", "libmp3lame", "-b:a", f"{bitrate}k"]
+    cmd.append(str(dst))
+    return cmd
+
+
+class ConvertWorker(QThread):
+    finished_ok = pyqtSignal(str)
+    failed = pyqtSignal(str)
+
+    def __init__(self, cmd: list[str], parent=None) -> None:
+        super().__init__(parent)
+        self.cmd = cmd
+
+    def run(self) -> None:
+        try:
+            proc = subprocess.run(
+                self.cmd,
+                capture_output=True,
+                text=True,
+                timeout=3600,
+            )
+            if proc.returncode != 0:
+                err = (proc.stderr or proc.stdout or "errore sconosciuto").strip()
+                self.failed.emit(err[-1200:] if len(err) > 1200 else err)
+                return
+            self.finished_ok.emit(self.cmd[-1])
+        except subprocess.TimeoutExpired:
+            self.failed.emit("Conversione interrotta: timeout")
+        except OSError as exc:
+            self.failed.emit(str(exc))
+
+
+class DropZone(QFrame):
+    file_dropped = pyqtSignal(str)
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self.setObjectName("dropZone")
+        lay = QVBoxLayout(self)
+        lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon = QLabel("♪")
+        self.icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon.setStyleSheet("font-size: 36px; color: #5a6570;")
+        self.hint = QLabel("Trascina qui il file multimediale")
+        self.hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hint.setStyleSheet("color: #3d4650; font-size: 14px;")
+        self.btn = QPushButton("Scegli file…")
+        self.btn.setObjectName("secondaryBtn")
+        self.btn.setFixedWidth(140)
+        row = QHBoxLayout()
+        row.addStretch()
+        row.addWidget(self.btn)
+        row.addStretch()
+        lay.addWidget(self.icon)
+        lay.addWidget(self.hint)
+        lay.addSpacing(8)
+        lay.addLayout(row)
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        urls = event.mimeData().urls()
+        if not urls:
+            return
+        path = urls[0].toLocalFile()
+        if path:
+            self.file_dropped.emit(path)
+
+
+class ConverterWindow(QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Quelo Converter — Conversione audio")
+        self.setMinimumSize(720, 520)
+        self.resize(780, 560)
+        self.source: Path | None = None
+        self.worker: ConvertWorker | None = None
+        self._build()
+
+    def _build(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(20, 18, 20, 16)
+        root.setSpacing(14)
+
+        self.drop = DropZone()
+        self.drop.setMinimumHeight(140)
+        self.drop.btn.clicked.connect(self.choose_file)
+        self.drop.file_dropped.connect(self.load_path)
+        root.addWidget(self.drop)
+
+        lab_info = QLabel("File rilevato")
+        lab_info.setObjectName("sectionLabel")
+        root.addWidget(lab_info)
+
+        self.info = QLabel("Nessun file caricato")
+        self.info.setObjectName("infoBar")
+        self.info.setWordWrap(True)
+        self.info.setMinimumHeight(40)
+        root.addWidget(self.info)
+
+        lab_par = QLabel("Parametri di conversione")
+        lab_par.setObjectName("sectionLabel")
+        root.addWidget(lab_par)
+
+        form = QFormLayout()
+        form.setHorizontalSpacing(24)
+        form.setVerticalSpacing(10)
+        form.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        self.codec = QComboBox()
+        for label, _ext, _lossy in CODECS:
+            self.codec.addItem(label)
+        self.codec.currentIndexChanged.connect(self._sync_ext_from_codec)
+
+        self.ext = QComboBox()
+        for _label, ext, _lossy in CODECS:
+            self.ext.addItem(f".{ext}")
+        self.ext.currentIndexChanged.connect(self._sync_codec_from_ext)
+
+        ch_row = QHBoxLayout()
+        self.radio_stereo = QRadioButton("Stereo")
+        self.radio_mono = QRadioButton("Mono")
+        self.radio_stereo.setChecked(True)
+        self.ch_group = QButtonGroup(self)
+        self.ch_group.addButton(self.radio_stereo)
+        self.ch_group.addButton(self.radio_mono)
+        ch_row.addWidget(self.radio_stereo)
+        ch_row.addWidget(self.radio_mono)
+        ch_row.addStretch()
+
+        self.rate = QComboBox()
+        self.rate.addItems([f"{r} Hz" for r in SAMPLE_RATES])
+        self.rate.setCurrentText("44100 Hz")
+
+        self.bitrate = QComboBox()
+        self.bitrate.addItems([f"{b} kb/s" for b in BITRATES])
+        self.bitrate.setCurrentText("192 kb/s")
+
+        form.addRow("Codec", self.codec)
+        form.addRow("Estensione", self.ext)
+        form.addRow("Canali", ch_row)
+        form.addRow("Campionamento", self.rate)
+        form.addRow("Bitrate", self.bitrate)
+        root.addLayout(form)
+        root.addStretch()
+
+        bottom = QHBoxLayout()
+        self.status = QLabel("")
+        self.status.setStyleSheet("color: #5a6570;")
+        bottom.addWidget(self.status, 1)
+        self.export_btn = QPushButton("Esporta…")
+        self.export_btn.setObjectName("exportBtn")
+        self.export_btn.setEnabled(False)
+        self.export_btn.clicked.connect(self.export_audio)
+        bottom.addWidget(self.export_btn)
+        root.addLayout(bottom)
+
+        self._sync_bitrate_enabled()
+
+    def _sync_ext_from_codec(self) -> None:
+        idx = self.codec.currentIndex()
+        if 0 <= idx < len(CODECS):
+            self.ext.blockSignals(True)
+            self.ext.setCurrentIndex(idx)
+            self.ext.blockSignals(False)
+        self._sync_bitrate_enabled()
+
+    def _sync_codec_from_ext(self) -> None:
+        idx = self.ext.currentIndex()
+        if 0 <= idx < len(CODECS):
+            self.codec.blockSignals(True)
+            self.codec.setCurrentIndex(idx)
+            self.codec.blockSignals(False)
+        self._sync_bitrate_enabled()
+
+    def _sync_bitrate_enabled(self) -> None:
+        idx = self.codec.currentIndex()
+        lossy = CODECS[idx][2] if 0 <= idx < len(CODECS) else True
+        self.bitrate.setEnabled(lossy)
+
+    def choose_file(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Scegli file multimediale",
+            str(Path.home()),
+            "Multimediale (*.*);;Tutti i file (*)",
+        )
+        if path:
+            self.load_path(path)
+
+    def load_path(self, path_str: str) -> None:
+        path = Path(path_str).expanduser().resolve()
+        if not path.is_file():
+            QMessageBox.warning(self, "Quelo Converter", "File non valido.")
+            return
+        self.status.setText("Analisi file…")
+        QApplication.processEvents()
+        info = probe_file(path)
+        if not info["has_audio"] and which("ffprobe"):
+            QMessageBox.warning(
+                self,
+                "Quelo Converter",
+                "Nessuna traccia audio trovata in questo file.",
+            )
+            self.status.setText("")
+            return
+        self.source = path
+        bits = [
+            f"Nome: {info['name']}",
+            f"Formato: {info['format']}",
+            f"Canali: {info['channels']}",
+            f"Campionamento: {info['rate']}",
+            f"Bitrate: {info['bitrate']}",
+            f"Durata: {info['duration']}",
+        ]
+        if info["is_video"]:
+            bits.append("Tipo: video (si esporta solo l'audio)")
+        self.info.setText("  |  ".join(bits))
+        self.export_btn.setEnabled(True)
+        self.status.setText("Pronto per esportare")
+        # Allinea canali UI al file se riconoscibili
+        if info["channels"] == "Mono":
+            self.radio_mono.setChecked(True)
+        elif info["channels"] == "Stereo":
+            self.radio_stereo.setChecked(True)
+
+    def export_audio(self) -> None:
+        if not self.source or not self.source.is_file():
+            return
+        if not which("ffmpeg"):
+            QMessageBox.critical(self, "Quelo Converter", "ffmpeg non è installato.")
+            return
+        idx = self.codec.currentIndex()
+        label, ext, _lossy = CODECS[idx]
+        suggested = self.source.with_name(f"{self.source.stem}_convertito.{ext}")
+        path_str, _ = QFileDialog.getSaveFileName(
+            self,
+            "Esporta audio",
+            str(suggested),
+            f"Audio (*.{ext});;Tutti i file (*)",
+        )
+        if not path_str:
+            return
+        dst = Path(path_str)
+        if dst.suffix.lower() != f".{ext}":
+            dst = dst.with_suffix(f".{ext}")
+        channels = 1 if self.radio_mono.isChecked() else 2
+        rate = self.rate.currentText().replace(" Hz", "").strip()
+        br = self.bitrate.currentText().replace(" kb/s", "").strip()
+        try:
+            cmd = build_ffmpeg_cmd(
+                self.source,
+                dst,
+                codec_label=label,
+                channels=channels,
+                sample_rate=rate,
+                bitrate=br,
+            )
+        except RuntimeError as exc:
+            QMessageBox.critical(self, "Quelo Converter", str(exc))
+            return
+
+        self.export_btn.setEnabled(False)
+        self.status.setText("Conversione in corso…")
+        self.worker = ConvertWorker(cmd, self)
+        self.worker.finished_ok.connect(self._on_ok)
+        self.worker.failed.connect(self._on_fail)
+        self.worker.start()
+
+    def _on_ok(self, path: str) -> None:
+        self.export_btn.setEnabled(True)
+        self.status.setText(f"Salvato: {path}")
+        QMessageBox.information(self, "Quelo Converter", f"Esportazione completata.\n\n{path}")
+
+    def _on_fail(self, err: str) -> None:
+        self.export_btn.setEnabled(True)
+        self.status.setText("Errore in conversione")
+        QMessageBox.critical(self, "Quelo Converter", f"Conversione fallita.\n\n{err}")
+
+
+STYLE = """
+QWidget {
+  background: #f4f5f6;
+  color: #1e242a;
+  font-size: 13px;
+}
+QLabel#sectionLabel {
+  font-weight: 600;
+  font-size: 13px;
+  color: #2a323a;
+  margin-top: 4px;
+}
+QFrame#dropZone {
+  background: #fafbfc;
+  border: 1.5px dashed #9aa3ad;
+  border-radius: 6px;
+}
+QLabel#infoBar {
+  background: #e8eaed;
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: #2a323a;
+}
+QPushButton#secondaryBtn {
+  background: #e6e8eb;
+  border: 1px solid #c5cad0;
+  border-radius: 4px;
+  padding: 6px 14px;
+}
+QPushButton#secondaryBtn:hover { background: #dce0e4; }
+QPushButton#exportBtn {
+  background: #2f8f8a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 22px;
+  font-weight: 600;
+}
+QPushButton#exportBtn:hover { background: #277a76; }
+QPushButton#exportBtn:disabled { background: #9db8b6; }
+QComboBox {
+  background: white;
+  border: 1px solid #c5cad0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 160px;
+}
+QRadioButton { spacing: 6px; }
+"""
+
+
+def main() -> int:
+    if not which("ffmpeg"):
+        print("quelo-audio-converter: serve ffmpeg", file=sys.stderr)
+        return 1
+    app = QApplication(sys.argv)
+    app.setApplicationName("quelo-audio-converter")
+    font = QFont()
+    font.setPointSize(10)
+    app.setFont(font)
+    app.setStyleSheet(STYLE)
+    win = ConverterWindow()
+    win.show()
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,372 @@
+Quelo Audiomaker — Credits / Ringraziamenti
+===========================================
+
+Progetto: Quelo Audiomaker (quelo-audiomaker)
+
+Derivato dal lavoro di base Quelo Office (stesso autore), con focus audio/produzione.
+
+Elenco aggiornato alla release 0.08-alpha
+(DAW Ardour/REAPER, codec, plugin, Mixxx, BUTT, MediaInfo,
+ quelo-audio-converter, quelo-palinsesto-radio — LINK/PLAYLIST/ANTI BIANCO,
+ manuale Desktop, interfacce audio, Calamares).
+
+
+================================================================================
+ITALIANO
+================================================================================
+
+Ispirazione
+-----------
+Ringraziamenti particolari a Corrado Guzzanti per aver creato il personaggio
+«Quelo», musa e fonte d’ispirazione di questo progetto.
+
+  Corrado Guzzanti | personaggio «Quelo» (ispirazione) | —
+
+
+Software di terze parti
+-----------------------
+Per ogni voce: Autore / progetto | Software | Sito o riferimento
+
+Sistema e build
+  Debian Project | Debian GNU/Linux (sid) | https://www.debian.org/
+  Debian Live team | live-build, live-boot, live-config | https://wiki.debian.org/DebianLive
+  Free Software Foundation | GNU GRUB | https://www.gnu.org/software/grub/
+  Lennart Poettering et al. | systemd | https://systemd.io/
+  Python Software Foundation | Python 3 | https://www.python.org/
+  Python Software Foundation | tkinter / python3-tk (prepare-usb host GUI) | https://www.python.org/
+  Tcl Core Team | Tcl/Tk | https://www.tcl.tk/
+  Pillow contributors | Pillow (python3-pil) | https://python-pillow.org/
+
+Installer su disco e display manager
+  Calamares team | Calamares | https://calamares.io/
+  Debian Live / Calamares packaging | calamares-settings-debian | https://wiki.debian.org/DebianLive
+  LightDM developers | LightDM | https://github.com/canonical/lightdm
+  LightDM GTK Greeter contributors | lightdm-gtk-greeter | https://github.com/Xubuntu/lightdm-gtk-greeter
+  GNU Parted team | parted | https://www.gnu.org/software/parted/
+  Roderick W. Smith | GPT fdisk (gdisk / sgdisk) | https://www.rodsbooks.com/gdisk/
+  dosfstools contributors | dosfstools | https://github.com/dosfstools/dosfstools
+  Philippe Troin et al. | squashfs-tools (unsquashfs) | https://github.com/plougher/squashfs-tools
+  Todd C. Miller / sudo project | sudo | https://www.sudo.ws/
+  GRUB / Debian | grub-efi-amd64 (UEFI) | https://www.gnu.org/software/grub/
+  GRUB / Debian | grub-pc (BIOS legacy, pool ISO) | https://www.gnu.org/software/grub/
+  efibootmgr contributors | efibootmgr | https://github.com/rhboot/efibootmgr
+  Qt Project | qt6-l10n-tools (solo build traduzioni Calamares IT) | https://www.qt.io/
+
+prepare-usb GUI Windows (host 32/64 bit)
+  Python Software Foundation | Python 3.9.13 Win32 (pacchetto offline) | https://www.python.org/
+  Tcl Core Team | Tcl/Tk (con Python Win32 / tkinter) | https://www.tcl.tk/
+  Theodore Ts'o / e2fsprogs | mke2fs (creazione ext4 persistenza) | https://e2fsprogs.sourceforge.net/
+  Cygwin Project | runtime Cygwin x86 (DLL per mke2fs.exe) | https://cygwin.com/
+  Roderick W. Smith | GPT fdisk — sgdisk32.exe (diagnostica GPT) | https://www.rodsbooks.com/gdisk/
+  maxpat78 | FATtools (formattazione exFAT in-place) | https://github.com/maxpat78/FATtools
+  Microsoft | diskpart, PowerShell, mountvol (strumenti di sistema Windows) | https://www.microsoft.com/
+
+Firmware di rete (vendor)
+  Debian non-free-firmware | firmware-* (LAN, WiFi, mobile) | https://wiki.debian.org/Firmware
+
+Rete
+  NetworkManager team | NetworkManager, network-manager-applet | https://networkmanager.dev/
+  freedesktop.org | ModemManager | https://www.freedesktop.org/wiki/Software/ModemManager/
+  wpasupplicant / iw contributors | wpasupplicant, iw | https://w1.fi/
+
+Desktop e ambiente grafico
+  X.Org Foundation | X.Org (xorg, driver) | https://www.x.org/
+  Dana Jansens et al. | Openbox | https://openbox.org/
+  LXQt team | LXQt (lxqt-core, lxqt-panel, lxqt-config, …) | https://lxqt-project.org/
+  LXQt team | lxqt-powermanagement (batteria / AC nel tray) | https://lxqt-project.org/
+  LXDE/LXQt team | lxrandr, lxterminal | https://lxqt-project.org/
+  LXQt team | pcmanfm-qt, libfm-qt | https://lxqt-project.org/
+  LXQt team | lximage-qt | https://lxqt-project.org/
+  GNOME / freedesktop.org | gvfs | https://wiki.gnome.org/Projects/gvfs
+  freedesktop.org | UPower (upower) | https://upower.freedesktop.org/
+  KDE community | breeze-icon-theme | https://community.kde.org/Breeze
+  Qt Company | Qt 6 | https://www.qt.io/
+  Riverbank Computing | PyQt6 (wizard Calamares Quelo, quelo-audio-converter, quelo-palinsesto-radio) | https://www.riverbankcomputing.com/software/pyqt/
+  PyGObject / GNOME | python3-gi (player GStreamer Quelo-palinsesto-radio) | https://pygobject.gnome.org/
+  freedesktop.org | xdotool | https://www.semicomplete.com/projects/xdotool/
+  freedesktop.org | x11-utils | https://www.freedesktop.org/
+
+Memoria (ZRAM) e test
+  systemd / zram-generator | systemd-zram-generator | https://github.com/systemd/zram-generator
+  Colin Ian King | stress-ng | https://github.com/ColinIanKing/stress-ng
+
+Audio (produzione)
+  Audacity Team | Audacity | https://www.audacityteam.org/
+  Audacious development team | Audacious | https://audacious-media-player.org/
+  Mixxx DJ Software | Mixxx | https://mixxx.org/
+  Daniel Nöthen | BUTT (Broadcast Using This Tool, AppImage upstream) | https://danielnoethen.de/butt/
+  MediaArea.net | MediaInfo / mediainfo-gui | https://mediaarea.net/MediaInfo
+  Ardour Team | Ardour | https://ardour.org/
+  Cockos Incorporated | REAPER | https://www.reaper.fm/
+  FFmpeg team | FFmpeg (anche probe/normalize Quelo-palinsesto-radio e converter) | https://ffmpeg.org/
+  GStreamer team | GStreamer + gstreamer1.0-pulseaudio / plugins-bad curlhttpsrc (player Quelo-palinsesto-radio, LINK stream) | https://gstreamer.freedesktop.org/
+  curl / libcurl | trasporto HTTP(S) usato da curlhttpsrc | https://curl.se/
+  GNOME / glib-networking | stack TLS GIO (altri programmi; stream LINK via curl) | https://gitlab.gnome.org/GNOME/glib-networking
+  SQLite team | SQLite (sqlite3; DB Quelo-palinsesto-radio `.palinsesto.db`) | https://www.sqlite.org/
+  PulseAudio / pactl | elenco ingressi LIVE Quelo-palinsesto-radio | https://www.freedesktop.org/wiki/Software/PulseAudio/
+  LSP Project | Linux Studio Plugins (lsp-plugins) | https://lsp-plug.in/
+  Calf Studio Gear | calf-plugins | https://calf-studio-gear.org/
+  Robin Gareus et al. | x42-plugins | https://github.com/x42/x42-plugins
+  Damien Zam | zam-plugins | https://www.zamaudio.com/
+  Michael Willis et al. | Dragonfly Reverb | https://github.com/michaelwillis/dragonfly-reverb
+  Steve Harris et al. | SWH plugins | http://plugin.org.uk/
+  Paul Kellett / Fons Adriaensen | MDA LV2 | https://github.com/moddevices/mda-lv2
+  DISTRHO | DPF plugins | https://github.com/DISTRHO/DPF-Plugins
+  Vesa Linja-aho et al. | EQ10Q | https://eq10q.sourceforge.io/
+  Breakfast Quay | Rubber Band | https://breakfastquay.com/rubberband/
+  Invada / Fraser | Invada Studio plugins (deb Debian trixie su ISO sid) | https://launchpad.net/invada-studio
+  rncbc | synthv1 / samplv1 / drumkv1 / padthv1 | https://synthv1.sourceforge.io/
+  Nick Dowell et al. | amsynth | https://amsynth.github.io/
+  Sean Bolton et al. | hexter | https://github.com/smbolton/hexter
+  Guitarix team | guitarix | https://guitarix.org/
+  Robin Gareus | avldrums.lv2 | https://github.com/x42/avldrums.lv2
+  DrumGizmo team | DrumGizmo | https://drumgizmo.org/
+  FluidSynth team | FluidSynth | https://www.fluidsynth.org/
+  Frank Wen / MuseScore | Fluid R3 GM SoundFont | https://packages.debian.org/fluid-soundfont-gm
+  ALSA project / Geoffrey Bennett et al. | alsa-scarlett-gui (Focusrite Scarlett/Clarett) | https://github.com/geoffreybennett/alsa-scarlett-gui
+  ALSA project | alsa-tools, alsa-tools-gui (hdspmixer, hdspconf, envy24control, …) | https://www.alsa-project.org/
+  Free Software Foundation / Linux | fxload (caricamento firmware USB FX2) | https://packages.debian.org/fxload
+  dfu-util contributors | dfu-util (Device Firmware Upgrade USB) | https://dfu-util.sourceforge.net/
+  Linux kernel / Debian | firmware-linux-free (blob firmware free) | https://wiki.debian.org/Firmware
+  FFADO project | libffado2, ffado-tools, ffado-dbus-server, ffado-mixer (FireWire audio) | http://www.ffado.org/
+
+Display / GPU (driver schermo)
+  NVIDIA Corporation | nvidia-driver | https://www.nvidia.com/
+  AMD / Debian non-free-firmware | firmware-amd-graphics | https://wiki.debian.org/Firmware
+  Mesa / Khronos | libglu1-mesa | https://www.mesa3d.org/
+  libfuse / FUSE | fuse3, libfuse2 | https://github.com/libfuse/libfuse
+
+Altre applicazioni
+  Mozilla | Firefox ESR | https://www.mozilla.org/firefox/enterprise/
+  Xfce developers | Mousepad | https://gitlab.xfce.org/apps/mousepad
+  pwmt | Zathura | https://pwmt.org/projects/zathura/
+  freedesktop.org | Poppler (zathura-pdf-poppler) | https://poppler.freedesktop.org/
+  KDE community | kdialog | https://kde.org/
+  Giuseppe Tucci et al. | Xarchiver | https://github.com/ib/xarchiver
+  Alexander Reinholdt et al. | SMB4K | https://apps.kde.org/smb4k/
+  GNOME / Canonical | Simple Scan | https://gitlab.gnome.org/GNOME/simple-scan
+  Tom Gilbert et al. | scrot | https://github.com/resurrecting-open-source-projects/scrot
+  GNOME project | zenity | https://gitlab.gnome.org/GNOME/zenity
+
+Audio
+  PulseAudio / freedesktop.org | PulseAudio, pavucontrol | https://www.freedesktop.org/wiki/Software/PulseAudio/
+  ALSA team | alsa-utils | https://www.alsa-project.org/
+
+Stampa e scanner
+  OpenPrinting / Apple et al. | CUPS | https://openprinting.org/
+  OpenPrinting | ipp-usb | https://github.com/OpenPrinting/ipp-usb
+  Avahi developers | Avahi | https://avahi.org/
+  SANE project | SANE (sane-utils, sane-airscan) | https://www.sane-project.org/
+  Gutenprint project | printer-driver-gutenprint | https://gutenprint.sourceforge.net/
+  HP / Linux Foundation | printer-driver-hpcups | https://developers.hp.com/hp-linux-imaging-and-printing
+
+Bluetooth
+  BlueZ contributors | BlueZ | https://www.bluez.org/
+  Blueman team | Blueman | https://github.com/blueman-project/blueman
+  Ayatana Indicators | libayatana-appindicator | https://github.com/AyatanaIndicators
+
+Archivi e filesystem
+  Info-ZIP | zip, unzip | https://info-zip.org/
+  Igor Pavlov / 7-Zip | p7zip-full | https://www.7-zip.org/
+  RARLAB | unrar | https://www.rarlab.com/
+  exFAT FUSE / Samsung et al. | exfatprogs | https://github.com/exfatprogs/exfatprogs
+  Samba Team | cifs-utils | https://www.samba.org/
+
+Font
+  Microsoft | TrueType core fonts (msttcorefonts) | https://www.microsoft.com/typography/
+
+Software originale Quelo (oltre overlay/ISO)
+-------------------------------------------
+  quelo-audio-converter | convertitore audio GUI (export solo audio)
+  quelo-palinsesto-radio | scheduler/player palinsesto radio (SQLite + GStreamer;
+                         LINK, PLAYLIST, ANTI BIANCO, silence-gate, SETTING)
+  manuale_palinsesto.pdf | manuale utente palinsesto (Desktop + Zathura)
+
+Autori del progetto Quelo Audiomaker
+------------------------------------
+  Alberto Frosio | autore e maintainer | alby@gnumerica.org
+
+
+Contributori
+------------
+
+
+================================================================================
+ENGLISH
+================================================================================
+
+Inspiration
+-----------
+Special thanks to Corrado Guzzanti for creating the character «Quelo»,
+muse and source of inspiration for this project.
+
+  Corrado Guzzanti | «Quelo» character (inspiration) | —
+
+
+Third-party software
+--------------------
+For each entry: Author / project | Software | Website or reference
+
+System and build
+  Debian Project | Debian GNU/Linux (sid) | https://www.debian.org/
+  Debian Live team | live-build, live-boot, live-config | https://wiki.debian.org/DebianLive
+  Free Software Foundation | GNU GRUB | https://www.gnu.org/software/grub/
+  Lennart Poettering et al. | systemd | https://systemd.io/
+  Python Software Foundation | Python 3 | https://www.python.org/
+  Python Software Foundation | tkinter / python3-tk (prepare-usb host GUI) | https://www.python.org/
+  Tcl Core Team | Tcl/Tk | https://www.tcl.tk/
+  Pillow contributors | Pillow (python3-pil) | https://python-pillow.org/
+
+Installer and display manager
+  Calamares team | Calamares | https://calamares.io/
+  Debian Live / Calamares packaging | calamares-settings-debian | https://wiki.debian.org/DebianLive
+  LightDM developers | LightDM | https://github.com/canonical/lightdm
+  LightDM GTK Greeter contributors | lightdm-gtk-greeter | https://github.com/Xubuntu/lightdm-gtk-greeter
+  GNU Parted team | parted | https://www.gnu.org/software/parted/
+  Roderick W. Smith | GPT fdisk (gdisk / sgdisk) | https://www.rodsbooks.com/gdisk/
+  dosfstools contributors | dosfstools | https://github.com/dosfstools/dosfstools
+  Philippe Troin et al. | squashfs-tools (unsquashfs) | https://github.com/plougher/squashfs-tools
+  Todd C. Miller / sudo project | sudo | https://www.sudo.ws/
+  GRUB / Debian | grub-efi-amd64 (UEFI) | https://www.gnu.org/software/grub/
+  GRUB / Debian | grub-pc (legacy BIOS, ISO pool) | https://www.gnu.org/software/grub/
+  efibootmgr contributors | efibootmgr | https://github.com/rhboot/efibootmgr
+  Qt Project | qt6-l10n-tools (build-only for Calamares IT translations) | https://www.qt.io/
+
+prepare-usb GUI Windows (32/64-bit host)
+  Python Software Foundation | Python 3.9.13 Win32 (offline package) | https://www.python.org/
+  Tcl Core Team | Tcl/Tk (with Python Win32 / tkinter) | https://www.tcl.tk/
+  Theodore Ts'o / e2fsprogs | mke2fs (ext4 persistence) | https://e2fsprogs.sourceforge.net/
+  Cygwin Project | Cygwin x86 runtime (DLLs for mke2fs.exe) | https://cygwin.com/
+  Roderick W. Smith | GPT fdisk — sgdisk32.exe (GPT diagnostics) | https://www.rodsbooks.com/gdisk/
+  maxpat78 | FATtools (in-place exFAT formatting) | https://github.com/maxpat78/FATtools
+  Microsoft | diskpart, PowerShell, mountvol (Windows system tools) | https://www.microsoft.com/
+
+Network firmware (vendors)
+  Debian non-free-firmware | firmware-* (LAN, WiFi, mobile) | https://wiki.debian.org/Firmware
+
+Networking
+  NetworkManager team | NetworkManager, network-manager-applet | https://networkmanager.dev/
+  freedesktop.org | ModemManager | https://www.freedesktop.org/wiki/Software/ModemManager/
+  wpasupplicant / iw contributors | wpasupplicant, iw | https://w1.fi/
+
+Desktop and graphical environment
+  X.Org Foundation | X.Org (xorg, drivers) | https://www.x.org/
+  Dana Jansens et al. | Openbox | https://openbox.org/
+  LXQt team | LXQt (lxqt-core, lxqt-panel, lxqt-config, …) | https://lxqt-project.org/
+  LXQt team | lxqt-powermanagement (battery / AC tray) | https://lxqt-project.org/
+  LXDE/LXQt team | lxrandr, lxterminal | https://lxqt-project.org/
+  LXQt team | pcmanfm-qt, libfm-qt | https://lxqt-project.org/
+  LXQt team | lximage-qt | https://lxqt-project.org/
+  GNOME / freedesktop.org | gvfs | https://wiki.gnome.org/Projects/gvfs
+  freedesktop.org | UPower (upower) | https://upower.freedesktop.org/
+  KDE community | breeze-icon-theme | https://community.kde.org/Breeze
+  Qt Company | Qt 6 | https://www.qt.io/
+  Riverbank Computing | PyQt6 (Quelo Calamares wizards, quelo-audio-converter, quelo-palinsesto-radio) | https://www.riverbankcomputing.com/software/pyqt/
+  PyGObject / GNOME | python3-gi (GStreamer player for Quelo-palinsesto-radio) | https://pygobject.gnome.org/
+  freedesktop.org | xdotool | https://www.semicomplete.com/projects/xdotool/
+  freedesktop.org | x11-utils | https://www.freedesktop.org/
+
+Memory (ZRAM) and testing
+  systemd / zram-generator | systemd-zram-generator | https://github.com/systemd/zram-generator
+  Colin Ian King | stress-ng | https://github.com/ColinIanKing/stress-ng
+
+Audio (production)
+  Audacity Team | Audacity | https://www.audacityteam.org/
+  Audacious development team | Audacious | https://audacious-media-player.org/
+  Mixxx DJ Software | Mixxx | https://mixxx.org/
+  Daniel Nöthen | BUTT (Broadcast Using This Tool, AppImage upstream) | https://danielnoethen.de/butt/
+  MediaArea.net | MediaInfo / mediainfo-gui | https://mediaarea.net/MediaInfo
+  Ardour Team | Ardour | https://ardour.org/
+  Cockos Incorporated | REAPER | https://www.reaper.fm/
+  FFmpeg team | FFmpeg (also Quelo-palinsesto-radio / converter probe) | https://ffmpeg.org/
+  GStreamer team | GStreamer + gstreamer1.0-pulseaudio / plugins-bad curlhttpsrc (Quelo-palinsesto-radio player, LINK streams) | https://gstreamer.freedesktop.org/
+  curl / libcurl | HTTP(S) transport used by curlhttpsrc | https://curl.se/
+  GNOME / glib-networking | GIO TLS stack (other apps; LINK streams via curl) | https://gitlab.gnome.org/GNOME/glib-networking
+  SQLite team | SQLite (sqlite3; Quelo-palinsesto-radio `.palinsesto.db`) | https://www.sqlite.org/
+  PulseAudio / pactl | LIVE input listing for Quelo-palinsesto-radio | https://www.freedesktop.org/wiki/Software/PulseAudio/
+  LSP Project | Linux Studio Plugins (lsp-plugins) | https://lsp-plug.in/
+  Calf Studio Gear | calf-plugins | https://calf-studio-gear.org/
+  Robin Gareus et al. | x42-plugins | https://github.com/x42/x42-plugins
+  Damien Zam | zam-plugins | https://www.zamaudio.com/
+  Michael Willis et al. | Dragonfly Reverb | https://github.com/michaelwillis/dragonfly-reverb
+  Steve Harris et al. | SWH plugins | http://plugin.org.uk/
+  Paul Kellett / Fons Adriaensen | MDA LV2 | https://github.com/moddevices/mda-lv2
+  DISTRHO | DPF plugins | https://github.com/DISTRHO/DPF-Plugins
+  Vesa Linja-aho et al. | EQ10Q | https://eq10q.sourceforge.io/
+  Breakfast Quay | Rubber Band | https://breakfastquay.com/rubberband/
+  Invada / Fraser | Invada Studio plugins (Debian trixie debs on sid ISO) | https://launchpad.net/invada-studio
+  rncbc | synthv1 / samplv1 / drumkv1 / padthv1 | https://synthv1.sourceforge.io/
+  Nick Dowell et al. | amsynth | https://amsynth.github.io/
+  Sean Bolton et al. | hexter | https://github.com/smbolton/hexter
+  Guitarix team | guitarix | https://guitarix.org/
+  Robin Gareus | avldrums.lv2 | https://github.com/x42/avldrums.lv2
+  DrumGizmo team | DrumGizmo | https://drumgizmo.org/
+  FluidSynth team | FluidSynth | https://www.fluidsynth.org/
+  Frank Wen / MuseScore | Fluid R3 GM SoundFont | https://packages.debian.org/fluid-soundfont-gm
+  ALSA project / Geoffrey Bennett et al. | alsa-scarlett-gui (Focusrite Scarlett/Clarett) | https://github.com/geoffreybennett/alsa-scarlett-gui
+  ALSA project | alsa-tools, alsa-tools-gui (hdspmixer, hdspconf, envy24control, …) | https://www.alsa-project.org/
+  Free Software Foundation / Linux | fxload (USB FX2 firmware loader) | https://packages.debian.org/fxload
+  dfu-util contributors | dfu-util (USB Device Firmware Upgrade) | https://dfu-util.sourceforge.net/
+  Linux kernel / Debian | firmware-linux-free (free firmware blobs) | https://wiki.debian.org/Firmware
+  FFADO project | libffado2, ffado-tools, ffado-dbus-server, ffado-mixer (FireWire audio) | http://www.ffado.org/
+
+Display / GPU (screen drivers)
+  NVIDIA Corporation | nvidia-driver | https://www.nvidia.com/
+  AMD / Debian non-free-firmware | firmware-amd-graphics | https://wiki.debian.org/Firmware
+  Mesa / Khronos | libglu1-mesa | https://www.mesa3d.org/
+  libfuse / FUSE | fuse3, libfuse2 | https://github.com/libfuse/libfuse
+
+Other applications
+  Mozilla | Firefox ESR | https://www.mozilla.org/firefox/enterprise/
+  Xfce developers | Mousepad | https://gitlab.xfce.org/apps/mousepad
+  pwmt | Zathura | https://pwmt.org/projects/zathura/
+  freedesktop.org | Poppler (zathura-pdf-poppler) | https://poppler.freedesktop.org/
+  KDE community | kdialog | https://kde.org/
+  Giuseppe Tucci et al. | Xarchiver | https://github.com/ib/xarchiver
+  Alexander Reinholdt et al. | SMB4K | https://apps.kde.org/smb4k/
+  GNOME / Canonical | Simple Scan | https://gitlab.gnome.org/GNOME/simple-scan
+  Tom Gilbert et al. | scrot | https://github.com/resurrecting-open-source-projects/scrot
+  GNOME project | zenity | https://gitlab.gnome.org/GNOME/zenity
+
+Audio
+  PulseAudio / freedesktop.org | PulseAudio, pavucontrol | https://www.freedesktop.org/wiki/Software/PulseAudio/
+  ALSA team | alsa-utils | https://www.alsa-project.org/
+
+Printing and scanning
+  OpenPrinting / Apple et al. | CUPS | https://openprinting.org/
+  OpenPrinting | ipp-usb | https://github.com/OpenPrinting/ipp-usb
+  Avahi developers | Avahi | https://avahi.org/
+  SANE project | SANE (sane-utils, sane-airscan) | https://www.sane-project.org/
+  Gutenprint project | printer-driver-gutenprint | https://gutenprint.sourceforge.net/
+  HP / Linux Foundation | printer-driver-hpcups | https://developers.hp.com/hp-linux-imaging-and-printing
+
+Bluetooth
+  BlueZ contributors | BlueZ | https://www.bluez.org/
+  Blueman team | Blueman | https://github.com/blueman-project/blueman
+  Ayatana Indicators | libayatana-appindicator | https://github.com/AyatanaIndicators
+
+Archives and filesystems
+  Info-ZIP | zip, unzip | https://info-zip.org/
+  Igor Pavlov / 7-Zip | p7zip-full | https://www.7-zip.org/
+  RARLAB | unrar | https://www.rarlab.com/
+  exFAT FUSE / Samsung et al. | exfatprogs | https://github.com/exfatprogs/exfatprogs
+  Samba Team | cifs-utils | https://www.samba.org/
+
+Fonts
+  Microsoft | TrueType core fonts (msttcorefonts) | https://www.microsoft.com/typography/
+
+
+Original Quelo software (beyond overlay/ISO)
+-------------------------------------------
+  quelo-audio-converter | audio converter GUI (audio-only export)
+  quelo-palinsesto-radio | radio schedule player (SQLite + GStreamer;
+                         LINK, PLAYLIST, ANTI BIANCO, silence-gate, SETTING)
+  manuale_palinsesto.pdf | palinsesto user manual (Desktop + Zathura)
+
+Quelo Audiomaker project authors
+--------------------------------
+  Alberto Frosio | author and maintainer | alby@gnumerica.org
+
+
+Contributors
+------------

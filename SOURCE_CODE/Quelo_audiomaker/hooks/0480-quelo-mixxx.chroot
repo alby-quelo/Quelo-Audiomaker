@@ -1,0 +1,59 @@
+#!/bin/bash
+# Mixxx: wrapper, skel, mapping extra da upstream 2.5 (solo file mancanti).
+set -euo pipefail
+
+chmod 755 /usr/local/bin/quelo-mixxx 2>/dev/null || true
+
+# Seed directory impostazioni (live root + nuovi utenti)
+for d in /root/.mixxx /etc/skel/.mixxx; do
+  mkdir -p "${d}/controllers"
+done
+
+# Mapping ufficiali del pacchetto: /usr/share/mixxx/controllers
+# Aggiungi eventuali mapping presenti in upstream 2.5 ma non ancora nel deb
+# (cp -n = non sovrascrivere quelli del pacchetto).
+CTRL_DST="/usr/share/mixxx/controllers"
+if [[ -d "${CTRL_DST}" ]]; then
+  TMP="$(mktemp -d)"
+  synced=0
+  if command -v wget >/dev/null 2>&1 || command -v curl >/dev/null 2>&1; then
+    ARCHIVE="${TMP}/mixxx-2.5.tar.gz"
+    if command -v wget >/dev/null 2>&1; then
+      wget -q -O "${ARCHIVE}" \
+        "https://codeload.github.com/mixxxdj/mixxx/tar.gz/refs/heads/2.5" || true
+    else
+      curl -fsSL -o "${ARCHIVE}" \
+        "https://codeload.github.com/mixxxdj/mixxx/tar.gz/refs/heads/2.5" || true
+    fi
+    if [[ -s "${ARCHIVE}" ]]; then
+      tar -xzf "${ARCHIVE}" -C "${TMP}" --wildcards '*/res/controllers' --strip-components=0 2>/dev/null \
+        || tar -xzf "${ARCHIVE}" -C "${TMP}" 2>/dev/null || true
+      SRC_CTRL="$(find "${TMP}" -type d -path '*/res/controllers' 2>/dev/null | head -1 || true)"
+      if [[ -n "${SRC_CTRL}" && -d "${SRC_CTRL}" ]]; then
+        cp -an "${SRC_CTRL}/." "${CTRL_DST}/" 2>/dev/null || true
+        synced=1
+        echo "quelo-mixxx: controllers sync da mixxx 2.5 (solo file nuovi)"
+      fi
+    fi
+  fi
+  if [[ "${synced}" -eq 0 ]]; then
+    echo "quelo-mixxx: skip sync controllers (download fallito — restano mapping del pacchetto)"
+  fi
+  rm -rf "${TMP}"
+fi
+
+# Desktop entry di sistema: etichetta Quelo (se presente .desktop del deb)
+for desk in /usr/share/applications/org.mixxx.Mixxx.desktop /usr/share/applications/mixxx.desktop; do
+  if [[ -f "${desk}" ]]; then
+    sed -i \
+      -e 's/^Name=.*/Name=Mixer per Djset \/ Podcast/' \
+      -e 's/^Name\[it\]=.*/Name[it]=Mixer per Djset \/ Podcast/' \
+      -e 's|^Exec=.*|Exec=quelo-mixxx|' \
+      "${desk}" 2>/dev/null || true
+    if ! grep -q '^Name\[it\]=' "${desk}" 2>/dev/null; then
+      echo 'Name[it]=Mixer per Djset / Podcast' >>"${desk}"
+    fi
+  fi
+done
+
+echo "quelo-mixxx: hook completato"

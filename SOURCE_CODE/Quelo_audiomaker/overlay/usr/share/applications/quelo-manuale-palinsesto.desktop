@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MANUALE PALINSESTO
+Name[it]=MANUALE PALINSESTO
+Comment=Manuale utente Quelo-palinsesto-radio
+Comment[it]=Manuale utente Quelo-palinsesto-radio
+Exec=zathura /usr/share/quelo-audiomaker/manuale_palinsesto.pdf
+Icon=/usr/share/quelo-audiomaker/quelo-manuale-palinsesto.png
+Terminal=false
+Categories=Office;Documentation;
+Keywords=quelo;manuale;palinsesto;pdf;
+StartupNotify=true

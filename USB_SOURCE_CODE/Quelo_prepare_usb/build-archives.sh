@@ -1,0 +1,153 @@
+#!/bin/bash
+# Rigenera zip / rar / tar dei pacchetti prepare-usb in DOWNLOAD/
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+VERSION_FILE="${PROJECT_DIR}/SOURCE_CODE/Quelo_office/VERSION"
+OUT_DIR="${PROJECT_DIR}/DOWNLOAD"
+STAGE="${OUT_DIR}/.staging"
+
+VER="$(grep '^QUELO_PUBLISH_ISO_VERSION=' "${SCRIPT_DIR}/prepare-usb.sh" | sed 's/.*"\(.*\)".*/\1/')-alpha"
+if [[ -z "${VER}" || "${VER}" == "-alpha" ]]; then
+  if [[ -f "${VERSION_FILE}" ]]; then
+    VER="$(tr -d '[:space:]' <"${VERSION_FILE}")-alpha"
+  else
+    VER="0.71-alpha"
+  fi
+fi
+
+PKG="Quelo_prepare_usb"
+PKG_GUI="Quelo_prepare_usb_gui"
+PKG_WIN="Quelo_prepare_usb_gui_win"
+# Nome distribuzione Windows (richiesto: zip/rar/tar con questo basename)
+PKG_WIN_DIST="Quelo-prepare_usb_windows"
+BASE="${OUT_DIR}/${PKG}-${VER}"
+BASE_GUI="${OUT_DIR}/${PKG_GUI}-${VER}"
+BASE_WIN="${OUT_DIR}/${PKG_WIN}-${VER}"
+BASE_WIN_DIST="${OUT_DIR}/${PKG_WIN_DIST}"
+
+FULL_FILES=(
+  prepare-usb.sh
+  prepare-usb-gui.sh
+  prepare-usb-gui.py
+  quelo_prepare_lib.py
+  quelo_prepare_common.py
+  quelo_prepare_win_lib.py
+  quelo-write-iso.py
+  logo.png
+  NOTES-MANUALE.txt
+  build-archives.sh
+  AVVIA.bat
+  LEGGIMI-WINDOWS.txt
+)
+
+GUI_FILES=(
+  prepare-usb-gui.sh
+  prepare-usb-gui.py
+  quelo_prepare_lib.py
+  quelo_prepare_common.py
+  quelo-write-iso.py
+  logo.png
+  NOTES-MANUALE.txt
+)
+
+WIN_FILES=(
+  prepare-usb-gui.py
+  quelo_prepare_common.py
+  quelo_prepare_win_lib.py
+  quelo-write-iso.py
+  logo.png
+  NOTES-MANUALE.txt
+  AVVIA.bat
+  LEGGIMI-WINDOWS.txt
+)
+
+mkdir -p "${OUT_DIR}"
+rm -rf "${STAGE}"
+mkdir -p "${STAGE}/${PKG}" "${STAGE}/${PKG_GUI}" "${STAGE}/${PKG_WIN}"
+
+for name in "${FULL_FILES[@]}"; do
+  cp "${SCRIPT_DIR}/${name}" "${STAGE}/${PKG}/"
+done
+cp -a "${SCRIPT_DIR}/windows" "${STAGE}/${PKG}/"
+chmod +x "${STAGE}/${PKG}/prepare-usb.sh" "${STAGE}/${PKG}/prepare-usb-gui.sh" "${STAGE}/${PKG}/build-archives.sh"
+cp "${SCRIPT_DIR}/LEGGIMI-WINDOWS.txt" "${STAGE}/${PKG}/LEGGIMI.txt"
+
+for name in "${GUI_FILES[@]}"; do
+  cp "${SCRIPT_DIR}/${name}" "${STAGE}/${PKG_GUI}/"
+done
+chmod +x "${STAGE}/${PKG_GUI}/prepare-usb-gui.sh"
+
+for name in "${WIN_FILES[@]}"; do
+  cp "${SCRIPT_DIR}/${name}" "${STAGE}/${PKG_WIN}/"
+done
+cp "${SCRIPT_DIR}/LEGGIMI-WINDOWS.txt" "${STAGE}/${PKG_WIN}/LEGGIMI.txt"
+
+echo "Preparo asset offline Windows (Python 32 bit + mke2fs)..."
+"${SCRIPT_DIR}/windows/fetch-offline-assets.sh"
+
+cp -a "${SCRIPT_DIR}/windows" "${STAGE}/${PKG_WIN}/"
+rm -f "${STAGE}/${PKG_WIN}/windows/fetch-offline-assets.sh"
+rm -f "${STAGE}/${PKG_WIN}/windows/unpack-python-win32.sh"
+rm -f "${STAGE}/${PKG}/windows/fetch-offline-assets.sh"
+
+BUILD_STAMP="$(date +%Y%m%d-%H%M%S)"
+BASE_WIN_TS="${OUT_DIR}/${PKG_WIN_DIST}-${BUILD_STAMP}.zip"
+MANIFEST="${STAGE}/${PKG_WIN}/BUILD_MANIFEST.txt"
+
+{
+  echo "Quelo prepare-usb Windows — ${PKG_WIN_DIST} — build ${BUILD_STAMP}"
+  echo "Generato: $(date -Iseconds)"
+  echo ""
+  echo "File Python (md5):"
+  md5sum \
+    "${STAGE}/${PKG_WIN}/quelo-write-iso.py" \
+    "${STAGE}/${PKG_WIN}/quelo_prepare_win_lib.py" \
+    "${STAGE}/${PKG_WIN}/prepare-usb-gui.py" \
+    "${STAGE}/${PKG_WIN}/quelo_prepare_common.py"
+} >"${MANIFEST}"
+
+rm -f "${BASE}.zip" "${BASE}.rar" "${BASE}.tar"
+rm -f "${BASE_GUI}.zip" "${BASE_GUI}.rar" "${BASE_GUI}.tar"
+rm -f "${BASE_WIN}.zip" "${BASE_WIN}.rar" "${BASE_WIN}.tar"
+rm -f "${BASE_WIN_DIST}.zip" "${BASE_WIN_DIST}.rar" "${BASE_WIN_DIST}.tar"
+
+cd "${STAGE}"
+zip -r "${BASE}.zip" "${PKG}/"
+rar a -r "${BASE}.rar" "${PKG}/"
+tar -cf "${BASE}.tar" "${PKG}/"
+
+zip -r "${BASE_GUI}.zip" "${PKG_GUI}/"
+rar a -r "${BASE_GUI}.rar" "${PKG_GUI}/"
+tar -cf "${BASE_GUI}.tar" "${PKG_GUI}/"
+
+zip -r "${BASE_WIN}.zip" "${PKG_WIN}/"
+rar a -r "${BASE_WIN}.rar" "${PKG_WIN}/"
+tar -cf "${BASE_WIN}.tar" "${PKG_WIN}/"
+
+# Distribuzione Windows con nome richiesto
+cp -a "${BASE_WIN}.zip" "${BASE_WIN_DIST}.zip"
+cp -a "${BASE_WIN}.rar" "${BASE_WIN_DIST}.rar"
+cp -a "${BASE_WIN}.tar" "${BASE_WIN_DIST}.tar"
+cp -a "${BASE_WIN_DIST}.zip" "${BASE_WIN_TS}"
+{
+  echo "${BUILD_STAMP} ${BASE_WIN_TS##*/}"
+  echo "Distribuzione: ${PKG_WIN_DIST}.zip / .rar / .tar"
+  md5sum "${BASE_WIN_DIST}.zip" "${BASE_WIN_DIST}.rar" "${BASE_WIN_DIST}.tar"
+  echo ""
+  cat "${MANIFEST}"
+} >"${OUT_DIR}/LATEST-WIN-ZIP.txt"
+
+rm -rf "${STAGE}"
+
+echo "Creati:"
+ls -lah "${BASE}".{zip,rar,tar} "${BASE_GUI}".{zip,rar,tar} \
+  "${BASE_WIN_DIST}".{zip,rar,tar} "${BASE_WIN_TS}"
+echo ""
+echo "Windows (usa questi):"
+echo "  ${BASE_WIN_DIST}.zip"
+echo "  ${BASE_WIN_DIST}.rar"
+echo "  ${BASE_WIN_DIST}.tar"
+echo "  (timestamp) ${BASE_WIN_TS}"
+cat "${OUT_DIR}/LATEST-WIN-ZIP.txt"
