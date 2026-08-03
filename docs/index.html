@@ -266,21 +266,82 @@
     </section>
 
     <section id="prepare-usb">
-      <h2>prepare-usb</h2>
+      <h2>prepare-usb (preparazione chiavetta)</h2>
       <div class="card" style="text-align:left">
-        <p style="margin:0 0 0.75rem;color:var(--text-muted)">
-          Prepara la USB <strong>dal PC host</strong> (mai dalla live sulla stessa chiavetta).
-          Schema identico a Quelo Office / Videomaker.
+        <p style="margin:0 0 0.75rem">
+          Dopo che avrai l’ISO fatta puoi procedere con questo passaggio:
         </p>
-        <h3 style="margin-top:1rem">Linux — GUI (repo)</h3>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cd USB_SOURCE_CODE/Quelo_prepare_usb
-./prepare-usb-gui.sh</pre>
-        <h3 style="margin-top:1rem">Windows — GUI (Quelo Office 0.71)</h3>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted)">
+          prepare-usb scrive l’ISO sulla chiavetta e crea le partizioni
+          <code>persistence</code> + <code>QUELO-HOME</code> (stesso schema di Quelo Office / Videomaker).
+          Esegui sempre <strong>dal PC host</strong>, mai dalla live avviata sulla stessa USB.
+        </p>
+
+        <p style="margin:0 0 0.5rem;font-size:0.95rem"><strong>Scarica il pacchetto per il tuo sistema</strong></p>
+        <p style="margin:0 0 0.75rem;font-size:0.9rem;color:var(--text-muted)">
+          Stesso tool di Quelo Videomaker / Office (già adatto a questa ISO).
+          Pacchetti Linux dalla release
+          <a href="https://github.com/alby-quelo/quelo-videomaker/releases/tag/0.23-alpha">Videomaker 0.23-alpha</a>
+          (i nomi file possono contenere <code>0.02-alpha</code>).
+        </p>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Linux — completo (CLI + GUI)</p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.zip">ZIP</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.rar">RAR</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.tar">TAR</a>
+        </div>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Linux — solo GUI</p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.zip">ZIP</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.rar">RAR</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.tar">TAR</a>
+        </div>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Windows — GUI (32 e 64 bit, offline)</p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">
+          Pacchetti da Quelo Office 0.71-alpha (compatibili con questa ISO).
+        </p>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.zip">ZIP</a>
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.rar">RAR</a>
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.tar">TAR</a>
         </div>
+
+        <h3 style="margin-top:1.5rem">Come usarlo</h3>
+        <ol style="margin:0.5rem 0 1rem;padding-left:1.25rem;color:var(--text-muted)">
+          <li>Estrai l’archivio scaricato.</li>
+          <li>Avvia prepare-usb sul PC host (istruzioni sotto, a seconda del sistema).</li>
+          <li>Nella GUI scegli l’ISO <code>Quelo-Audiomaker-0.08-alpha.iso</code>, la chiavetta USB e la dimensione di persistenza; conferma digitando <code>SI SCRIVI</code>.</li>
+          <li>Quando ha finito, riavvia il PC e avvia dalla chiavetta (BIOS/UEFI).</li>
+        </ol>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Linux — GUI (consigliata)</strong></p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">Pacchetto completo:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">cd Quelo_prepare_usb
+./prepare-usb-gui.sh</pre>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">Oppure pacchetto solo GUI:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">cd Quelo_prepare_usb_gui
+./prepare-usb-gui.sh</pre>
+        <p style="margin:0 0 0.75rem;font-size:0.85rem;color:var(--text-muted)">
+          Prerequisiti (Debian/Ubuntu):
+          <code>sudo apt install python3 python3-tk e2fsprogs exfatprogs util-linux polkit-1</code>
+        </p>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Linux — terminale (CLI)</strong></p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cd Quelo_prepare_usb
+sudo ./prepare-usb.sh</pre>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Windows — GUI</strong></p>
+        <ol style="margin:0.35rem 0 0.5rem;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
+          <li>Estrai lo ZIP / RAR / TAR.</li>
+          <li>Doppio clic su <code>AVVIA.bat</code> (accetta UAC amministratore).</li>
+          <li>Scegli ISO Audiomaker, chiavetta USB, persistenza; digita <code>SI SCRIVI</code>.</li>
+        </ol>
+        <p style="margin:0;font-size:0.85rem;color:var(--text-muted)">
+          Pacchetto offline (include Python 32 bit). Serve Windows 7 SP1 o superiore e privilegi amministratore.
+        </p>
       </div>
     </section>
 

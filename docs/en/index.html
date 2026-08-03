@@ -204,20 +204,82 @@
     </section>
 
     <section id="prepare-usb">
-      <h2>prepare-usb</h2>
+      <h2>prepare-usb (USB stick preparation)</h2>
       <div class="card" style="text-align:left">
-        <p style="margin:0 0 0.75rem;color:var(--text-muted)">
-          Prepare the USB <strong>from the host PC</strong>. Same layout as Quelo Office / Videomaker.
+        <p style="margin:0 0 0.75rem">
+          Once you have the finished ISO, you can proceed with this step:
         </p>
-        <h3>Linux — GUI</h3>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cd USB_SOURCE_CODE/Quelo_prepare_usb
-./prepare-usb-gui.sh</pre>
-        <h3>Windows — GUI (Quelo Office 0.71)</h3>
+        <p style="margin:0 0 0.75rem;color:var(--text-muted)">
+          prepare-usb writes the ISO to the stick and creates
+          <code>persistence</code> + <code>QUELO-HOME</code> (same layout as Quelo Office / Videomaker).
+          Always run on the <strong>host PC</strong>, never from the live system booted from the same stick.
+        </p>
+
+        <p style="margin:0 0 0.5rem;font-size:0.95rem"><strong>Download the package for your system</strong></p>
+        <p style="margin:0 0 0.75rem;font-size:0.9rem;color:var(--text-muted)">
+          Same tool as Quelo Videomaker / Office (already suitable for this ISO).
+          Linux packages from release
+          <a href="https://github.com/alby-quelo/quelo-videomaker/releases/tag/0.23-alpha">Videomaker 0.23-alpha</a>
+          (filenames may still contain <code>0.02-alpha</code>).
+        </p>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Linux — full (CLI + GUI)</p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.zip">ZIP</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.rar">RAR</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb-0.02-alpha.tar">TAR</a>
+        </div>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Linux — GUI only</p>
+        <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.zip">ZIP</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.rar">RAR</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-videomaker/releases/download/0.23-alpha/Quelo_prepare_usb_gui-0.02-alpha.tar">TAR</a>
+        </div>
+
+        <p style="margin:0.75rem 0 0.35rem;font-size:0.95rem">Windows — GUI (32 &amp; 64-bit, offline)</p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">
+          Packages from Quelo Office 0.71-alpha (compatible with this ISO).
+        </p>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.zip">ZIP</a>
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.rar">RAR</a>
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.tar">TAR</a>
         </div>
+
+        <h3 style="margin-top:1.5rem">How to use it</h3>
+        <ol style="margin:0.5rem 0 1rem;padding-left:1.25rem;color:var(--text-muted)">
+          <li>Extract the archive you downloaded.</li>
+          <li>Run prepare-usb on the host PC (steps below for your OS).</li>
+          <li>In the GUI choose <code>Quelo-Audiomaker-0.08-alpha.iso</code>, the USB stick and persistence size; confirm by typing <code>SI SCRIVI</code>.</li>
+          <li>When finished, reboot and boot from the stick (BIOS/UEFI).</li>
+        </ol>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Linux — GUI (recommended)</strong></p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">Full package:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">cd Quelo_prepare_usb
+./prepare-usb-gui.sh</pre>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">Or GUI-only package:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">cd Quelo_prepare_usb_gui
+./prepare-usb-gui.sh</pre>
+        <p style="margin:0 0 0.75rem;font-size:0.85rem;color:var(--text-muted)">
+          Prerequisites (Debian/Ubuntu):
+          <code>sudo apt install python3 python3-tk e2fsprogs exfatprogs util-linux polkit-1</code>
+        </p>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Linux — CLI</strong></p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cd Quelo_prepare_usb
+sudo ./prepare-usb.sh</pre>
+
+        <p style="margin:0 0 0.35rem;font-size:0.95rem"><strong>Windows — GUI</strong></p>
+        <ol style="margin:0.35rem 0 0.5rem;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
+          <li>Extract the ZIP / RAR / TAR.</li>
+          <li>Double-click <code>AVVIA.bat</code> (accept UAC admin prompt).</li>
+          <li>Choose the Audiomaker ISO, USB stick, persistence; type <code>SI SCRIVI</code>.</li>
+        </ol>
+        <p style="margin:0;font-size:0.85rem;color:var(--text-muted)">
+          Offline package (includes 32-bit Python). Requires Windows 7 SP1 or later and administrator privileges.
+        </p>
       </div>
     </section>
 
