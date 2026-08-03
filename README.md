@@ -22,7 +22,7 @@ Ispirata al personaggio «Quelo» di Corrado Guzzanti e derivata dal progetto **
 
 ### REAPER (Cockos)
 
-Nella distro è incluso **REAPER** (menu **REAPER - Editor Audio Pro**). Si può usare **anche senza acquistare subito la licenza** (modalità di valutazione Cockos, con avviso dopo circa 60 giorni).
+Nella distro è incluso **REAPER** (menu **REAPER - Editor Audio Pro**). Si può usare **anche senza acquistare subito la licenza** (modalità di valutazione Cockos): dopo circa 60 giorni compare un **avviso**, ma il programma **continua a funzionare al 100%** — è solo un reminder, non un blocco.
 
 Si invita comunque a **sostenere il progetto Cockos** acquistando una licenza ufficiale:  
 → [https://www.reaper.fm/](https://www.reaper.fm/)
@@ -39,7 +39,7 @@ Applicazione inclusa (**menu PALINSESTO RADIO**) per programmare e mandare in on
 - Import file: peak-normalize verso 0 dB di picco; titolo/descrizione da tag (o modifica manuale).
 - Timeline a blocchi colorati (altezza ∝ durata); **Start** avvia lo scheduler in tempo reale (VU 0 dBFS + volume).
 - Persistenza: un solo DB SQLite `.palinsesto.db` su **QUELO-HOME** (live) o `$HOME` (installata) — **non** passa dal salva-sessione.
-- Manuale utente PDF: icona Desktop **MANUALE PALINSESTO** (Zathura).
+- **Manuale:** [scarica il PDF](https://github.com/alby-quelo/Quelo-Audiomaker/raw/main/docs/manuale_palinsesto.pdf)
 
 
 ## A cosa serve
@@ -139,11 +139,11 @@ Dopo `prepare-usb` (stesso schema di Quelo Office / Videomaker):
 - `Quelo-Audiomaker-0.08-alpha.iso.part01`
 - `Quelo-Audiomaker-0.08-alpha.iso.sha256` (opzionale)
 - script JOIN: [`docs/JOIN-ISO-0.08-alpha.sh`](docs/JOIN-ISO-0.08-alpha.sh) / [`docs/JOIN-ISO-0.08-alpha.bat`](docs/JOIN-ISO-0.08-alpha.bat)  
-  istruzioni: [`docs/README-ISO-0.08-alpha.txt`](docs/README-ISO-0.08-alpha.txt)
+  istruzioni complete: [`docs/README-ISO-0.08-alpha.txt`](docs/README-ISO-0.08-alpha.txt)
 
-Nella cartella delle parti, unisci con **un** comando:
+**Unisci le parti** (nella stessa cartella dei file scaricati):
 
-Windows (Prompt dei comandi):
+Windows — Prompt dei comandi:
 
 ```bat
 copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso
@@ -153,10 +153,9 @@ Linux / macOS:
 
 ```bash
 cat Quelo-Audiomaker-0.08-alpha.iso.part* > Quelo-Audiomaker-0.08-alpha.iso
-sha256sum -c Quelo-Audiomaker-0.08-alpha.iso.sha256
 ```
 
-Oppure: doppio clic su `JOIN-ISO-0.08-alpha.bat` (Windows) / `bash JOIN-ISO-0.08-alpha.sh` (Linux).
+In alternativa: doppio clic su `JOIN-ISO-0.08-alpha.bat` (Windows) oppure `bash JOIN-ISO-0.08-alpha.sh` (Linux) — dettagli in [`README-ISO-0.08-alpha.txt`](docs/README-ISO-0.08-alpha.txt).
 
 ### 2. Prepara la chiavetta USB
 
@@ -217,4 +216,4 @@ Documenti: **`LICENSE.TXT`**, **`CREDITS.TXT`**, **`CHANGELOG.md`**, **`HOW-TO-m
 
 Il lavoro originale Quelo Audiomaker è rilasciato sotto **Creative Commons BY-NC 4.0**. Uso didattico e non commerciale consentito con attribuzione; uso commerciale solo con autorizzazione scritta di **Alberto Frosio** (`alby@gnumerica.org`).
 
-I software inclusi nell’ISO restano soggetti alle rispettive licenze — vedi `LICENSE.TXT` e `CREDITS.TXT`. REAPER è software proprietario Cockos (valutazione con avviso dopo ~60 giorni); si invita a [acquistare una licenza](https://www.reaper.fm/) per sostenere gli autori.
+I software inclusi nell’ISO restano soggetti alle rispettive licenze — vedi `LICENSE.TXT` e `CREDITS.TXT`. REAPER è software proprietario Cockos (dopo ~60 giorni compare un avviso di valutazione, ma continua a funzionare al 100%); si invita a [acquistare una licenza](https://www.reaper.fm/) per sostenere gli autori.
