@@ -231,20 +231,37 @@
           <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.sha256">sha256 (opz.)</a>
         </div>
 
-        <h3 style="margin-top:1.25rem">2) Unisci le parti</h3>
+        <h3 style="margin-top:1.25rem">2) Unisci le parti → ottieni l’ISO</h3>
         <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
-          Istruzioni complete:
+          Serve <strong>solo</strong> se hai scaricato le 2 parti da GitHub
+          (non se hai preso l’ISO intera dal mirror).
+          Metti <strong>nella stessa cartella</strong> i file
+          <code>.part00</code>, <code>.part01</code> e lo script JOIN, poi scegli <strong>un</strong> metodo.
+          Istruzioni anche in
           <a href="README-ISO-0.08-alpha.txt">README-ISO-0.08-alpha.txt</a>.
-          Oppure i comandi:
         </p>
-        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Windows:</p>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso</pre>
-        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Linux / macOS:</p>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.75rem">cat Quelo-Audiomaker-0.08-alpha.iso.part* &gt; Quelo-Audiomaker-0.08-alpha.iso</pre>
+
+        <p style="margin:0 0 0.5rem;font-size:0.95rem"><strong>Metodo A — script (più semplice)</strong></p>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap;gap:0.5rem">
           <a class="btn btn-primary" href="JOIN-ISO-0.08-alpha.bat" download="JOIN-ISO-0.08-alpha.bat">Scarica .bat (Windows)</a>
           <a class="btn btn-primary" href="JOIN-ISO-0.08-alpha.sh" download="JOIN-ISO-0.08-alpha.sh">Scarica .sh (Linux)</a>
         </div>
+        <ul style="margin:0.75rem 0 0;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
+          <li><strong>Windows:</strong> salva il <code>.bat</code> nella cartella delle parti, poi <strong>doppio clic</strong> su
+            <code>JOIN-ISO-0.08-alpha.bat</code>. Se Windows blocca lo script: «Altre informazioni» → «Esegui comunque».</li>
+          <li><strong>Linux:</strong> salva lo <code>.sh</code> nella cartella delle parti, apri un terminale lì e digita:
+            <code>bash JOIN-ISO-0.08-alpha.sh</code></li>
+          <li>Alla fine compare il file <code>Quelo-Audiomaker-0.08-alpha.iso</code> nella stessa cartella.</li>
+        </ul>
+
+        <p style="margin:1rem 0 0.5rem;font-size:0.95rem"><strong>Metodo B — un comando nel terminale</strong></p>
+        <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--text-muted)">
+          Apri il terminale <em>nella cartella</em> dove hai le 2 parti e incolla <strong>una</strong> di queste righe:
+        </p>
+        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Windows (Prompt dei comandi):</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso</pre>
+        <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Linux / macOS:</p>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0">cat Quelo-Audiomaker-0.08-alpha.iso.part* &gt; Quelo-Audiomaker-0.08-alpha.iso</pre>
       </div>
     </section>
 
