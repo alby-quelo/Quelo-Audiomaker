@@ -1,0 +1,336 @@
+#!/usr/bin/env python3
+"""Notifica smontaggio sicuro USB/disco (UDisks2).
+
+Ascolta i job filesystem-unmount / drive-eject: mostra «attendi» mentre
+i dati vengono scritti, poi «puoi staccare» (o errore).
+
+Autostart: /etc/xdg/autostart/quelo-safe-eject-notify.desktop
+Funziona sia come utente normale (installata) sia come root (live Quelo).
+"""
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+
+try:
+    import gi
+
+    gi.require_version("GLib", "2.0")
+    gi.require_version("Gio", "2.0")
+    from gi.repository import GLib, Gio
+except ImportError:
+    sys.stderr.write("Serve python3-gi (GObject Introspection).\n")
+    sys.exit(1)
+
+UDISKS = "org.freedesktop.UDisks2"
+UDISKS_PATH = "/org/freedesktop/UDisks2"
+OPS_WAIT = frozenset({"filesystem-unmount", "drive-eject"})
+ACTIVE: dict = {}
+SESSION = {
+    "wait_proc": None,
+    "dev": None,
+    "media": "",
+    "name": "",
+    "done": False,
+    "unmount_timeout": 0,
+}
+
+
+def runtime_env() -> dict:
+    """Env per zenity: DISPLAY + session bus (anche root in live)."""
+    e = os.environ.copy()
+    e.setdefault("DISPLAY", ":0")
+    uid = os.getuid()
+    bus_path = f"/run/user/{uid}/bus"
+    if "DBUS_SESSION_BUS_ADDRESS" not in e and os.path.exists(bus_path):
+        e["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={bus_path}"
+    # Live root: a volte XAUTHORITY non è in env all'autostart
+    if uid == 0 and "XAUTHORITY" not in e:
+        for cand in ("/root/.Xauthority", "/run/lightdm/root/:0"):
+            if os.path.exists(cand):
+                e["XAUTHORITY"] = cand
+                break
+    return e
+
+
+def which(cmd: str):
+    return shutil.which(cmd)
+
+
+def run_gui(argv) -> None:
+    subprocess.Popen(
+        argv,
+        env=runtime_env(),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def show_wait(text: str):
+    env = runtime_env()
+    if which("zenity"):
+        return subprocess.Popen(
+            [
+                "zenity",
+                "--progress",
+                "--pulsate",
+                "--no-cancel",
+                "--title=Rimozione sicura",
+                f"--text={text}",
+            ],
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    return None
+
+
+def show_info(text: str, error: bool = False) -> None:
+    if which("zenity"):
+        run_gui(
+            [
+                "zenity",
+                "--error" if error else "--info",
+                "--title=Rimozione sicura",
+                "--width=420",
+                f"--text={text}",
+                "--ok-label=OK",
+            ]
+        )
+
+
+def as_str(v) -> str:
+    if isinstance(v, str):
+        return v
+    if hasattr(v, "unpack"):
+        u = v.unpack()
+        return str(u) if not isinstance(u, str) else u
+    return str(v)
+
+
+def proxy(bus, path, iface):
+    return Gio.DBusProxy.new_sync(
+        bus, Gio.DBusProxyFlags.NONE, None, UDISKS, path, iface, None
+    )
+
+
+def device_for_block(bus, block_path):
+    try:
+        p = proxy(bus, block_path, "org.freedesktop.UDisks2.Block")
+        return as_str(p.get_cached_property("Device").unpack())
+    except Exception:
+        return None
+
+
+def is_system_block(bus, block_path) -> bool:
+    try:
+        return (
+            proxy(bus, block_path, "org.freedesktop.UDisks2.Block")
+            .get_cached_property("HintSystem")
+            .get_boolean()
+        )
+    except Exception:
+        return False
+
+
+def is_removable_drive(bus, drive_path) -> bool:
+    try:
+        return (
+            proxy(bus, drive_path, "org.freedesktop.UDisks2.Drive")
+            .get_cached_property("MediaRemovable")
+            .get_boolean()
+        )
+    except Exception:
+        return True
+
+
+def is_removable_block(bus, block_path) -> bool:
+    try:
+        p = proxy(bus, block_path, "org.freedesktop.UDisks2.Block")
+        drive_path = as_str(p.get_cached_property("Drive").unpack())
+        if not drive_path or drive_path == "/":
+            return True
+        return is_removable_drive(bus, drive_path)
+    except Exception:
+        return True
+
+
+def friendly_name(dev) -> str:
+    if not dev:
+        return ""
+    try:
+        out = subprocess.check_output(
+            ["udisksctl", "info", "-b", dev],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        for line in out.splitlines():
+            if "IdLabel:" in line:
+                label = line.split(":", 1)[1].strip()
+                if label:
+                    return f' "{label}"'
+    except Exception:
+        pass
+    return ""
+
+
+def flush_device(dev) -> None:
+    if dev:
+        try:
+            subprocess.run(
+                ["blockdev", "--flushbufs", dev],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except Exception:
+            pass
+    subprocess.run(
+        ["sync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+
+
+def cancel_unmount_timeout() -> None:
+    tid = SESSION.get("unmount_timeout") or 0
+    if tid:
+        GLib.source_remove(tid)
+    SESSION["unmount_timeout"] = 0
+
+
+def close_wait() -> None:
+    proc = SESSION.get("wait_proc")
+    if not proc:
+        return
+    try:
+        proc.terminate()
+        proc.wait(timeout=2)
+    except Exception:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+    SESSION["wait_proc"] = None
+
+
+def begin_wait(bus, objects) -> None:
+    if SESSION["wait_proc"] is not None:
+        return
+
+    SESSION["done"] = False
+    cancel_unmount_timeout()
+
+    block_path = drive_path = dev = None
+    if objects:
+        obj = as_str(objects[0])
+        if "/drives/" in obj:
+            drive_path = obj
+        elif "/block_devices/" in obj:
+            block_path = obj
+            if is_system_block(bus, block_path):
+                return
+            dev = device_for_block(bus, block_path)
+
+    if drive_path:
+        media = "chiavetta" if is_removable_drive(bus, drive_path) else "disco"
+    elif block_path:
+        media = "chiavetta" if is_removable_block(bus, block_path) else "disco"
+    else:
+        media = "chiavetta"
+
+    name = friendly_name(dev)
+    msg = f"Attendi, sto scrivendo i dati.\nNon staccare la {media}{name}."
+    SESSION["wait_proc"] = show_wait(msg)
+    SESSION["dev"] = dev
+    SESSION["media"] = media
+    SESSION["name"] = name
+
+
+def finish_session(ok: bool = True) -> None:
+    if SESSION["done"]:
+        return
+    SESSION["done"] = True
+    cancel_unmount_timeout()
+    close_wait()
+
+    dev = SESSION.get("dev")
+    media = SESSION.get("media") or "chiavetta"
+    name = SESSION.get("name") or ""
+    SESSION["dev"] = SESSION["media"] = SESSION["name"] = None
+
+    flush_device(dev)
+    if ok:
+        show_info(f"Ho finito.\nOra puoi staccare la {media}{name}.")
+    else:
+        show_info(
+            f"Non sono riuscito a smontare la {media}{name}.\n"
+            "Chiudi i programmi che la usano e riprova.",
+            error=True,
+        )
+
+
+def finish_unmount_only(ok) -> bool:
+    SESSION["unmount_timeout"] = 0
+    if SESSION["done"]:
+        return False
+    if any(op == "drive-eject" for op in ACTIVE.values()):
+        return False
+    if ACTIVE:
+        return False
+    finish_session(ok=ok)
+    return False
+
+
+def on_interfaces_added(_c, _s, _p, _i, _sig, params, _user_data=None) -> None:
+    job_path, ifaces = params.unpack()
+    job = ifaces.get("org.freedesktop.UDisks2.Job")
+    if not job:
+        return
+    op = as_str(job.get("Operation", ""))
+    if op not in OPS_WAIT:
+        return
+    objects = job.get("Objects", []) or []
+    ACTIVE[job_path] = op
+    begin_wait(_c, objects)
+
+
+def on_job_completed(_c, _s, path, _i, _sig, params, _user_data=None) -> None:
+    op = ACTIVE.pop(path, None)
+    if not op:
+        return
+    ok = bool(params.unpack()[0])
+    if op == "drive-eject":
+        finish_session(ok=ok)
+    elif op == "filesystem-unmount":
+        cancel_unmount_timeout()
+        SESSION["unmount_timeout"] = GLib.timeout_add(600, finish_unmount_only, ok)
+
+
+def main() -> None:
+    bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+    bus.signal_subscribe(
+        UDISKS,
+        "org.freedesktop.DBus.ObjectManager",
+        "InterfacesAdded",
+        UDISKS_PATH,
+        None,
+        Gio.DBusSignalFlags.NONE,
+        on_interfaces_added,
+        None,
+    )
+    bus.signal_subscribe(
+        UDISKS,
+        "org.freedesktop.UDisks2.Job",
+        "Completed",
+        None,
+        None,
+        Gio.DBusSignalFlags.NONE,
+        on_job_completed,
+        None,
+    )
+    GLib.MainLoop().run()
+
+
+if __name__ == "__main__":
+    main()

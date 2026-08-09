@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Quelo notifica smontaggio sicuro
+Comment=Avvisa quando è sicuro staccare USB/disco dopo lo smontaggio
+Exec=/usr/local/bin/quelo-safe-eject-notify
+Terminal=false
+Categories=System;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

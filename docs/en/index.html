@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html lang="en" prefix="og: https://ogp.me/ns# fb: https://ogp.me/ns/fb#">
 <head>
   <meta charset="utf-8">
+  <meta property="fb:app_id" content="1402918248430555">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quelo Audiomaker — live USB audio studio</title>
-  <meta name="description" content="Quelo Audiomaker 0.08-alpha: installable live Linux from USB. Portable audio studio: REAPER, Ardour, Mixxx, Quelo-palinsesto-radio, selective session save/restore.">
+  <title>Quelo Audiomaker 0.12-alpha — live USB audio studio</title>
+  <meta name="description" content="Quelo Audiomaker 0.12-alpha: live USB audio studio. Calamares, QUELO-HOME automount, REAPER, Ardour, Mixxx, radio schedule. Debian sid + LXQt.">
   <meta name="keywords" content="Quelo Audiomaker, live USB, Debian, audio, REAPER, Ardour, Mixxx, radio schedule, Calamares">
   <meta name="author" content="Alberto Frosio">
   <meta name="theme-color" content="#111111">
@@ -14,8 +15,8 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Quelo Audiomaker">
   <meta property="og:url" content="https://alby-quelo.github.io/Quelo-Audiomaker/en/">
-  <meta property="og:title" content="Quelo Audiomaker 0.08-alpha — live USB audio studio">
-  <meta property="og:description" content="Portable audio studio on USB: live and installable, session save/restore, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio. Debian sid + LXQt.">
+  <meta property="og:title" content="Quelo Audiomaker 0.12-alpha — live USB audio studio">
+  <meta property="og:description" content="0.12-alpha: portable audio studio on USB. QUELO-HOME automount, Calamares, REAPER, Ardour, Mixxx, radio schedule. Debian sid + LXQt.">
   <meta property="og:image" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
   <meta property="og:image:secure_url" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
   <meta property="og:image:type" content="image/png">
@@ -26,17 +27,17 @@
   <meta property="og:locale:alternate" content="it_IT">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Quelo Audiomaker 0.08-alpha — live USB audio studio">
-  <meta name="twitter:description" content="Portable audio studio on USB: live and installable, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio.">
+  <meta name="twitter:title" content="Quelo Audiomaker 0.12-alpha — live USB audio studio">
+  <meta name="twitter:description" content="0.12-alpha: live USB audio. QUELO-HOME automount, Calamares, REAPER, Ardour, Mixxx. Debian sid + LXQt.">
   <meta name="twitter:image" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
   <meta name="twitter:image:alt" content="Quelo Audiomaker desktop wallpaper">
 
-  <meta itemprop="name" content="Quelo Audiomaker 0.08-alpha">
-  <meta itemprop="description" content="Portable live and installable audio studio on a USB stick.">
+  <meta itemprop="name" content="Quelo Audiomaker 0.12-alpha">
+  <meta itemprop="description" content="0.12-alpha: portable live and installable audio studio on a USB stick.">
   <meta itemprop="image" content="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
 
   <link rel="image_src" href="https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png">
-  <link rel="stylesheet" href="../style.css?v=6">
+  <link rel="stylesheet" href="../style.css?v=7">
   <link rel="icon" href="../logo.png" type="image/png">
   <script type="application/ld+json">
   {
@@ -45,11 +46,11 @@
     "name": "Quelo Audiomaker",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Linux",
-    "softwareVersion": "0.08-alpha",
+    "softwareVersion": "0.12-alpha",
     "url": "https://alby-quelo.github.io/Quelo-Audiomaker/en/",
-    "downloadUrl": "https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso",
+    "downloadUrl": "https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso",
     "image": "https://alby-quelo.github.io/Quelo-Audiomaker/quelo-sfondo-audiomaker.png",
-    "description": "Live USB audio studio: live and installable, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio.",
+    "description": "0.12-alpha: live USB audio studio — Calamares, QUELO-HOME automount, REAPER, Ardour, Mixxx, Quelo-palinsesto-radio.",
     "author": { "@type": "Person", "name": "Alberto Frosio", "email": "alby@gnumerica.org" },
     "license": "https://creativecommons.org/licenses/by-nc/4.0/"
   }
@@ -83,7 +84,7 @@
         Made for You, Who Meow In The Dark!
       </p>
       <div class="badges">
-        <span class="badge">0.08-alpha</span>
+        <span class="badge">0.12-alpha</span>
         <span class="badge">Debian sid</span>
         <span class="badge">LXQt + Openbox</span>
         <span class="badge">CC BY-NC 4.0</span>
@@ -100,8 +101,8 @@
       </div>
 
       <div class="cta-row">
-        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
-          Download full ISO 0.08-alpha
+        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso">
+          Download full ISO 0.12-alpha
         </a>
         <a class="btn btn-primary" href="#iso-parts">
           GitHub parts / instructions
@@ -146,27 +147,39 @@
       </div>
     </section>
 
+    <section id="whats-new">
+      <h2>What’s new in 0.12-alpha</h2>
+      <p style="color:var(--text-muted)">
+        Since 0.08 — full detail in
+        <a href="https://github.com/alby-quelo/Quelo-Audiomaker/blob/main/CHANGELOG.md">CHANGELOG.md</a>.
+      </p>
+      <ul>
+        <li>Desktop/USB: safe eject, USB label, Power Management, <strong>QUELO-HOME</strong> automount (exFAT), QasTools, faster desktop start.</li>
+        <li>Calamares: wizards/summary aligned with Videomaker; Qt6 QML fix for failed summary load.</li>
+      </ul>
+    </section>
+
     <section id="iso-parts">
       <h2>Download ISO</h2>
       <div class="card" style="text-align:left">
         <h3 style="margin-top:0">Full ISO (recommended)</h3>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
-          <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
-            Download full ISO 0.08-alpha
+          <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso">
+            Download full ISO 0.12-alpha
           </a>
         </div>
 
         <h3 style="margin-top:1.5rem">Or: 1) Download the 2 parts from GitHub</h3>
         <p style="margin:0.5rem 0 0.75rem;color:var(--text-muted)">
-          GitHub rejects files over 2&nbsp;GB, so the ISO (~2.3&nbsp;GB) is split into 2 parts.
+          GitHub rejects files over 2&nbsp;GB, so the ISO (~2.5&nbsp;GB) is split into 2 parts.
           Download <strong>both</strong> into the <strong>same folder</strong>.
           Release:
-          <a href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha">0.08-alpha</a>.
+          <a href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.12-alpha">0.12-alpha</a>.
         </p>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap">
-          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.part00">1 · part00</a>
-          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.part01">2 · part01</a>
-          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.08-alpha/Quelo-Audiomaker-0.08-alpha.iso.sha256">sha256 (opt.)</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.12-alpha/Quelo-Audiomaker-0.12-alpha.iso.part00">1 · part00</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.12-alpha/Quelo-Audiomaker-0.12-alpha.iso.part01">2 · part01</a>
+          <a class="btn btn-secondary" href="https://github.com/alby-quelo/Quelo-Audiomaker/releases/download/0.12-alpha/Quelo-Audiomaker-0.12-alpha.iso.sha256">sha256 (opt.)</a>
         </div>
 
         <h3 style="margin-top:1.25rem">2) Join the parts → get the ISO</h3>
@@ -176,20 +189,20 @@
           Put <code>.part00</code>, <code>.part01</code> and the JOIN script in the
           <strong>same folder</strong>, then pick <strong>one</strong> method.
           Also see
-          <a href="../README-ISO-0.08-alpha.txt">README-ISO-0.08-alpha.txt</a>.
+          <a href="../README-ISO-0.12-alpha.txt">README-ISO-0.12-alpha.txt</a>.
         </p>
 
         <p style="margin:0 0 0.5rem;font-size:0.95rem"><strong>Method A — script (easiest)</strong></p>
         <div class="cta-row" style="justify-content:flex-start;margin-top:0;flex-wrap:wrap;gap:0.5rem">
-          <a class="btn btn-primary" href="../JOIN-ISO-0.08-alpha.bat" download="JOIN-ISO-0.08-alpha.bat">Download .bat (Windows)</a>
-          <a class="btn btn-primary" href="../JOIN-ISO-0.08-alpha.sh" download="JOIN-ISO-0.08-alpha.sh">Download .sh (Linux)</a>
+          <a class="btn btn-primary" href="../JOIN-ISO-0.12-alpha.bat" download="JOIN-ISO-0.12-alpha.bat">Download .bat (Windows)</a>
+          <a class="btn btn-primary" href="../JOIN-ISO-0.12-alpha.sh" download="JOIN-ISO-0.12-alpha.sh">Download .sh (Linux)</a>
         </div>
         <ul style="margin:0.75rem 0 0;padding-left:1.25rem;font-size:0.9rem;color:var(--text-muted)">
           <li><strong>Windows:</strong> save the <code>.bat</code> next to the parts, then <strong>double-click</strong>
-            <code>JOIN-ISO-0.08-alpha.bat</code>. If Windows blocks it: “More info” → “Run anyway”.</li>
+            <code>JOIN-ISO-0.12-alpha.bat</code>. If Windows blocks it: “More info” → “Run anyway”.</li>
           <li><strong>Linux:</strong> save the <code>.sh</code> next to the parts, open a terminal there and run:
-            <code>bash JOIN-ISO-0.08-alpha.sh</code></li>
-          <li>When finished you get <code>Quelo-Audiomaker-0.08-alpha.iso</code> in that folder.</li>
+            <code>bash JOIN-ISO-0.12-alpha.sh</code></li>
+          <li>When finished you get <code>Quelo-Audiomaker-0.12-alpha.iso</code> in that folder.</li>
         </ul>
 
         <p style="margin:1rem 0 0.5rem;font-size:0.95rem"><strong>Method B — one terminal command</strong></p>
@@ -197,9 +210,9 @@
           Open a terminal <em>in the folder</em> with the 2 parts and paste <strong>one</strong> of these lines:
         </p>
         <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Windows (Command Prompt):</p>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso</pre>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0 0 0.5rem">copy /b Quelo-Audiomaker-0.12-alpha.iso.part00 + Quelo-Audiomaker-0.12-alpha.iso.part01 Quelo-Audiomaker-0.12-alpha.iso</pre>
         <p style="margin:0.5rem 0 0.25rem;font-size:0.85rem;color:var(--text-muted)">Linux / macOS:</p>
-        <pre style="overflow:auto;font-size:0.85rem;margin:0">cat Quelo-Audiomaker-0.08-alpha.iso.part* &gt; Quelo-Audiomaker-0.08-alpha.iso</pre>
+        <pre style="overflow:auto;font-size:0.85rem;margin:0">cat Quelo-Audiomaker-0.12-alpha.iso.part* &gt; Quelo-Audiomaker-0.12-alpha.iso</pre>
       </div>
     </section>
 
@@ -251,7 +264,7 @@
         <ol style="margin:0.5rem 0 1rem;padding-left:1.25rem;color:var(--text-muted)">
           <li>Extract the archive you downloaded.</li>
           <li>Run prepare-usb on the host PC (steps below for your OS).</li>
-          <li>In the GUI choose <code>Quelo-Audiomaker-0.08-alpha.iso</code>, the USB stick and persistence size; confirm by typing <code>SI SCRIVI</code>.</li>
+          <li>In the GUI choose <code>Quelo-Audiomaker-0.12-alpha.iso</code>, the USB stick and persistence size; confirm by typing <code>SI SCRIVI</code>.</li>
           <li>When finished, reboot and boot from the stick (BIOS/UEFI).</li>
         </ol>
 
@@ -356,8 +369,8 @@ sudo ./prepare-usb.sh</pre>
         Read the ISO join and prepare-usb instructions above first, then download:
       </p>
       <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso">
-          Download full ISO 0.08-alpha
+        <a class="btn btn-mirror" href="https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso">
+          Download full ISO 0.12-alpha
         </a>
         <a class="btn btn-primary" href="#iso-parts">
           GitHub parts / instructions

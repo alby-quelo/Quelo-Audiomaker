@@ -31,6 +31,13 @@ blueman-applet &
 # lxqt-config-powermanagement (gestione energia).
 lxqt-powermanagement &
 
+# Notifica quando è sicuro staccare USB/disco dopo umount (serve pacchetto eject).
+/usr/local/bin/quelo-safe-eject-notify &
+
+# Dopo automount USB/dischi esterni: apre pcmanfm-qt sul mount
+# (Gio.VolumeMonitor; anche sull'installata via patch INSTALLED).
+/usr/local/bin/quelo-automount-open &
+
 # Caratteri pannello salvati (~/.config/quelo/) → tema utente lxqt.
 /usr/local/bin/quelo-font-apply-at-start &
 

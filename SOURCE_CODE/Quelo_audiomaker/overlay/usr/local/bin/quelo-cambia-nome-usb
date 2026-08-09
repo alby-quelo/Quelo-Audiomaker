@@ -1,0 +1,157 @@
+#!/bin/bash
+# quelo-cambia-nome-usb — rinomina etichetta volume chiavetta USB
+# SENZA formattare, SENZA cancellare i file, SENZA sudo (udisks2).
+# Menu: «CAMBIO ETICHETTA USB»
+set -euo pipefail
+
+block_obj() {
+  local path="$1" name
+  name="$(basename "${path}")"
+  printf '/org/freedesktop/UDisks2/block_devices/%s' "${name}"
+}
+
+list_usb_parts() {
+  local disks d p path label fstype size model
+  mapfile -t disks < <(lsblk -dn -o NAME,TRAN,TYPE 2>/dev/null | awk '$2=="usb" && $3=="disk" {print $1}')
+  if [[ "${#disks[@]}" -eq 0 ]]; then
+    return 0
+  fi
+  for d in "${disks[@]}"; do
+    model="$(lsblk -dn -o MODEL "/dev/${d}" 2>/dev/null | sed 's/[[:space:]]\+/ /g;s/^ //;s/ $//' || true)"
+    [[ -n "${model}" ]] || model="USB"
+    while read -r p; do
+      [[ -n "${p}" ]] || continue
+      path="/dev/${p}"
+      fstype="$(lsblk -dn -o FSTYPE "${path}" 2>/dev/null || true)"
+      [[ -n "${fstype}" ]] || continue
+      case "${fstype}" in
+        vfat|fat|fat32|exfat|ext2|ext3|ext4|ntfs) ;;
+        *) continue ;;
+      esac
+      label="$(lsblk -dn -o LABEL "${path}" 2>/dev/null || true)"
+      [[ -n "${label}" ]] || label="(senza nome)"
+      size="$(lsblk -dn -o SIZE "${path}" 2>/dev/null || true)"
+      printf '%s|%s|%s|%s|%s\n' "${path}" "${label}" "${fstype}" "${size}" "${model}"
+    done < <(lsblk -ln -o NAME,TYPE "/dev/${d}" 2>/dev/null | awk '$2=="part" {print $1}')
+  done
+}
+
+unmount_user() {
+  local path="$1"
+  if [[ -n "$(lsblk -dn -o MOUNTPOINT "${path}" 2>/dev/null | awk 'NF')" ]]; then
+    udisksctl unmount -b "${path}" >/dev/null 2>&1 || true
+    while read -r mp; do
+      [[ -n "${mp}" ]] || continue
+      udisksctl unmount -b "${path}" >/dev/null 2>&1 || true
+    done < <(lsblk -ln -o MOUNTPOINT "${path}" 2>/dev/null | awk 'NF')
+  fi
+}
+
+rename_via_udisks() {
+  local path="$1" new="$2" obj
+  obj="$(block_obj "${path}")"
+  if ! command -v gdbus >/dev/null 2>&1; then
+    echo "Manca gdbus (pacchetto libglib2.0-bin)."
+    return 1
+  fi
+  gdbus call --system \
+    --dest org.freedesktop.UDisks2 \
+    --object-path "${obj}" \
+    --method org.freedesktop.UDisks2.Filesystem.SetLabel \
+    "${new}" \
+    "{}" >/dev/null
+}
+
+echo "============================================"
+echo "  CAMBIO ETICHETTA USB"
+echo "  (nessuna formattazione, i file restano)"
+echo "============================================"
+echo
+
+while true; do
+  mapfile -t rows < <(list_usb_parts)
+  if [[ "${#rows[@]}" -eq 0 ]]; then
+    echo "Nessuna partizione USB utilizzabile trovata."
+    echo "Inserisci la chiavetta e riprova, oppure Q per uscire."
+  else
+    echo "Chiavette / volumi USB trovati:"
+    echo
+    i=1
+    for row in "${rows[@]}"; do
+      IFS='|' read -r path label fstype size model <<<"${row}"
+      printf '  %d) %-16s  %s  (%s, %s, %s)\n' \
+        "${i}" "${label}" "${path}" "${fstype}" "${size}" "${model}"
+      i=$((i + 1))
+    done
+    echo
+  fi
+
+  echo -n "Scegli il numero da rinominare, oppure Q per uscire: "
+  read -r scelta
+  scelta="$(echo "${scelta}" | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')"
+
+  if [[ "${scelta}" == "Q" ]]; then
+    echo "Uscita."
+    exit 0
+  fi
+
+  if ! [[ "${scelta}" =~ ^[0-9]+$ ]] || [[ "${#rows[@]}" -eq 0 ]] \
+     || [[ "${scelta}" -lt 1 ]] || [[ "${scelta}" -gt "${#rows[@]}" ]]; then
+    echo "Scelta non valida."
+    echo
+    continue
+  fi
+
+  idx=$((scelta - 1))
+  IFS='|' read -r path old_label fstype size model <<<"${rows[$idx]}"
+
+  echo
+  echo -n "Che nome vuoi dare? "
+  read -r new_label
+  new_label="$(echo "${new_label}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  if [[ -z "${new_label}" ]]; then
+    echo "Nome vuoto: annullato."
+    echo
+    continue
+  fi
+
+  if [[ "${fstype}" == "exfat" || "${fstype}" == "vfat" || "${fstype}" == "fat" || "${fstype}" == "fat32" ]]; then
+    if [[ "${#new_label}" -gt 11 ]]; then
+      echo "Attenzione: su ${fstype} il nome di solito non può superare 11 caratteri."
+      echo "Hai scritto ${#new_label} caratteri. Accorcia e riprova."
+      echo
+      continue
+    fi
+  fi
+
+  echo
+  echo "ATTENZIONE: stai rinominando «${old_label}» in «${new_label}»"
+  echo -n "Vuoi proseguire? S / N: "
+  read -r conf
+  conf="$(echo "${conf}" | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')"
+
+  if [[ "${conf}" != "S" ]]; then
+    echo "Hai rinunciato."
+    echo
+    continue
+  fi
+
+  unmount_user "${path}"
+
+  if rename_via_udisks "${path}" "${new_label}"; then
+    sleep 0.5
+    echo
+    echo "OK, fatto. Nuovo nome: «${new_label}» su ${path}"
+  else
+    echo
+    echo "ERRORE: rinominazione non riuscita."
+    echo "Se chiede autenticazione o fallisce, la sessione non è considerata"
+    echo "«attiva» da polkit, oppure il filesystem non supporta SetLabel."
+  fi
+  echo
+  echo -n "Invio per tornare all'elenco, oppure Q per uscire: "
+  read -r fine
+  fine="$(echo "${fine}" | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')"
+  [[ "${fine}" == "Q" ]] && { echo "Uscita."; exit 0; }
+  echo
+done

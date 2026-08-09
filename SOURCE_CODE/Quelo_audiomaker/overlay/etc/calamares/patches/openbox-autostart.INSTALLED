@@ -8,4 +8,11 @@ xsetroot -solid '#111111'
 blueman-applet &
 lxqt-powermanagement &
 
+# Icone Desktop (Mixxx / MANUALE) — stesso schema live, senza loop trust extra.
+/usr/local/bin/quelo-desktop-mixxx-icon.sh &
+/usr/local/bin/quelo-desktop-manuale-icon.sh &
+
+/usr/local/bin/quelo-safe-eject-notify &
+/usr/local/bin/quelo-automount-open &
+
 /usr/local/bin/quelo-font-apply-at-start &

@@ -60,10 +60,9 @@ quelo_export_home_dir() {
   fi
   if blkid -L "${QUELO_HOME_LABEL}" >/dev/null 2>&1; then
     mnt=$(mktemp -d)
-    # Stesse opzioni di quelo-usb-mount-home: exFAT senza fmask/dmask=0000
-    # rende i file leggibili/scrivibili solo da root (vedi quel file per i
-    # dettagli).
-    if mount -L "${QUELO_HOME_LABEL}" -o uid=0,gid=0,fmask=0000,dmask=0000 "${mnt}" 2>/dev/null; then
+    # Stesse opzioni di quelo-usb-mount-home: fmask/dmask=0022 (NON 0000),
+    # altrimenti i .desktop risultano world-writable e il trust rifiuta.
+    if mount -L "${QUELO_HOME_LABEL}" -o uid=0,gid=0,fmask=0022,dmask=0022 "${mnt}" 2>/dev/null; then
       printf '%s/quelo-export\n' "${mnt}"
       return 0
     fi

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Quelo — apri Gestione file su USB montata
+Comment=Dopo automount, apre pcmanfm-qt sulla partizione (VolumeMonitor)
+Exec=/usr/local/bin/quelo-automount-open
+Terminal=false
+Categories=System;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-LXQt-Need-Tray=false

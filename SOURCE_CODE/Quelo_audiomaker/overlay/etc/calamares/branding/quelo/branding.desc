@@ -9,16 +9,16 @@ windowPlacement: center
 strings:
     productName:         Quelo Audiomaker
     shortProductName:    Quelo
-    version:             0.01
-    shortVersion:        0.01
-    versionedName:       Quelo Audiomaker 0.01
-    shortVersionedName:  Quelo 0.01
+    version:             0.12
+    shortVersion:        0.12
+    versionedName:       Quelo Audiomaker 0.12
+    shortVersionedName:  Quelo 0.12
     bootloaderEntryName: Quelo Audiomaker
-    productUrl:          https://github.com/gnumerica/quelo-audiomaker
-    supportUrl:          https://github.com/gnumerica/quelo-audiomaker
-    knownIssuesUrl:      https://github.com/gnumerica/quelo-audiomaker/issues
-    releaseNotesUrl:     https://github.com/gnumerica/quelo-audiomaker
-    donateUrl:           https://github.com/gnumerica/quelo-audiomaker
+    productUrl:          https://github.com/alby-quelo/Quelo-Audiomaker
+    supportUrl:          https://github.com/alby-quelo/Quelo-Audiomaker
+    knownIssuesUrl:      https://github.com/alby-quelo/Quelo-Audiomaker/issues
+    releaseNotesUrl:     https://github.com/alby-quelo/Quelo-Audiomaker
+    donateUrl:           https://github.com/alby-quelo/Quelo-Audiomaker
 
 sidebar: widget
 navigation: widget

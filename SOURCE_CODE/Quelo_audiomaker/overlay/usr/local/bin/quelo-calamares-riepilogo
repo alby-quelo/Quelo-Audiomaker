@@ -15,7 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtCore import QRectF, Qt, QTimer
 from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPen
 from PyQt6.QtWidgets import (
     QApplication,
@@ -129,13 +129,18 @@ def current_segments(disk: str) -> list[dict]:
 
 def planned_segments(choices: dict) -> list[dict]:
     """Layout Quelo previsto (dopo)."""
-    try:
-        root_gib = float(choices.get("rootGiB", "80"))
-    except ValueError:
-        root_gib = 80.0
     separate = str(choices.get("separateHome", "false")).lower() == "true"
     home_fs = choices.get("homeFilesystem", "exfat") or "exfat"
     disk = choices.get("targetDevice", "")
+    root_raw = str(choices.get("rootGiB", "80")).strip().lower()
+
+    root_gib = 80.0
+    if separate:
+        try:
+            if root_raw not in ("rest", "100%", "all", "entire"):
+                root_gib = float(root_raw)
+        except ValueError:
+            root_gib = 80.0
 
     disk_size = 0
     try:
@@ -158,6 +163,18 @@ def planned_segments(choices: dict) -> list[dict]:
         )
         used += efi_b
 
+    if not separate:
+        root_b = max(disk_size - used, 1)
+        segs.append(
+            {
+                "label": "sistema (/)",
+                "size": root_b,
+                "color": COLOR_ROOT,
+                "detail": "ext4 · / · tutto il disco",
+            }
+        )
+        return segs
+
     root_b = int(root_gib * (1024**3))
     segs.append(
         {
@@ -169,28 +186,16 @@ def planned_segments(choices: dict) -> list[dict]:
     )
     used += root_b
 
-    if separate:
-        home_b = max(disk_size - used, 1)
-        mount = "/media/HOME" if home_fs == "exfat" else "/home"
-        segs.append(
-            {
-                "label": "HOME",
-                "size": home_b,
-                "color": COLOR_HOME,
-                "detail": f"{home_fs} · {mount} · resto del disco",
-            }
-        )
-    else:
-        rest = max(disk_size - used, 0)
-        if rest > 64 * 1024 * 1024:
-            segs.append(
-                {
-                    "label": "libero",
-                    "size": rest,
-                    "color": COLOR_EMPTY,
-                    "detail": "spazio non usato",
-                }
-            )
+    home_b = max(disk_size - used, 1)
+    mount = "/media/HOME" if home_fs == "exfat" else "/home"
+    segs.append(
+        {
+            "label": "HOME",
+            "size": home_b,
+            "color": COLOR_HOME,
+            "detail": f"{home_fs} · {mount} · resto del disco",
+        }
+    )
     return segs
 
 
@@ -253,13 +258,27 @@ class RiepilogoWindow(QMainWindow):
         super().__init__()
         self.choices = choices
         self.setWindowTitle("Quelo Audiomaker — Riepilogo installazione")
-        self.setMinimumSize(780, 640)
-        self.resize(820, 700)
+        self.setMinimumSize(600, 360)
+        self.resize(780, 600)
         for logo in LOGO_CANDIDATES:
             if logo.is_file():
                 self.setWindowIcon(QIcon(str(logo)))
                 break
         self._build()
+        QTimer.singleShot(0, self._fit_to_screen)
+
+    def _fit_to_screen(self) -> None:
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return
+        ag = screen.availableGeometry()
+        max_w = max(560, ag.width() - 32)
+        max_h = max(400, ag.height() - 32)
+        self.setMinimumSize(min(600, max_w), min(360, max_h))
+        self.resize(min(780, max_w), min(600, max_h))
+        frame = self.frameGeometry()
+        frame.moveCenter(ag.center())
+        self.move(frame.topLeft())
 
     def _build(self) -> None:
         # Shell: contenuto scrollabile + bottoni SEMPRE visibili in basso.
@@ -338,8 +357,6 @@ class RiepilogoWindow(QMainWindow):
         layout.addWidget(box_after)
 
         tip = QLabel(
-            "Software incluso (tra gli altri): Mixxx, Ardour, REAPER, Audacity, Audacious, "
-            "Firefox, Fotoritocco.\n"
             "Se qualcosa non torna: Indietro per correggere disco/GRUB, "
             "oppure Annulla e riparti dall'installer."
         )
@@ -439,8 +456,6 @@ def write_qml(choices: dict, path: Path = QML_OUT) -> None:
         "<p style=\\'color:#8a1f1f;\\'><b>Tutti i dati sul disco di installazione "
         "verranno cancellati.</b> Controlla disco, schema partizioni e GRUB, "
         "poi Avanti per confermare.</p>"
-        "<p><b>Software incluso</b> (tra gli altri): Mixxx, Ardour, REAPER, Audacity, "
-        "Audacious, Firefox, Fotoritocco — già nel sistema che stai installando.</p>"
         f"<p><b>Disco di installazione</b><br/>{_qml_escape(target_lbl)}"
         f"<br/><code>{_qml_escape(target)}</code></p>"
         f"<p><b>GRUB (avvio) verrà scritto su</b><br/>{_qml_escape(grub_lbl)}"

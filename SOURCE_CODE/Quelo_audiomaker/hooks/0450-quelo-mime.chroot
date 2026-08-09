@@ -49,4 +49,14 @@ if command -v xdg-mime >/dev/null 2>&1; then
   xdg-mime default quelo-firefox.desktop x-scheme-handler/https
   xdg-mime default lximage-qt.desktop image/jpeg image/png image/gif image/bmp image/webp image/tiff image/svg+xml
   xdg-mime default xarchiver.desktop application/zip application/x-rar application/x-7z-compressed
+  # Audio / playlist → Audacious
+  if [[ -f /usr/share/applications/audacious.desktop ]]; then
+    xdg-mime default audacious.desktop \
+      application/ogg application/x-cue application/x-ogg application/xspf+xml \
+      audio/aac audio/flac audio/midi audio/mp3 audio/mp4 audio/mpeg audio/mpegurl \
+      audio/ogg audio/prs.sid audio/wav audio/x-flac audio/x-it audio/x-mod \
+      audio/x-mp3 audio/x-mpeg audio/x-mpegurl audio/x-ms-asx audio/x-ms-wma \
+      audio/x-musepack audio/x-s3m audio/x-scpls audio/x-stm audio/x-vorbis+ogg \
+      audio/x-wav audio/x-wavpack audio/x-xm x-content/audio-cdda
+  fi
 fi

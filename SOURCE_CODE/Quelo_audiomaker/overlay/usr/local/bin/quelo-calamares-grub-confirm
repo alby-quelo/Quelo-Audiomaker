@@ -162,7 +162,7 @@ class GrubConfirmWindow(QMainWindow):
         self.choices = load_choices()
         self.disks = list_disks()
         self.setWindowTitle("Quelo Audiomaker — Conferma disco e GRUB")
-        self.setMinimumSize(720, 420)
+        self.setMinimumSize(600, 360)
         for logo in LOGO_CANDIDATES:
             if logo.is_file():
                 self.setWindowIcon(QIcon(str(logo)))
@@ -178,8 +178,18 @@ class GrubConfirmWindow(QMainWindow):
             if w.width() >= 120:
                 w._apply_height(w.width())
                 w.updateGeometry()
-        hint = self.sizeHint()
-        self.resize(max(self.width(), hint.width()), max(self.height(), hint.height(), 560))
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            self.resize(720, 480)
+            return
+        ag = screen.availableGeometry()
+        max_w = max(560, ag.width() - 32)
+        max_h = max(400, ag.height() - 32)
+        self.setMinimumSize(min(600, max_w), min(360, max_h))
+        self.resize(min(720, max_w), min(480, max_h))
+        frame = self.frameGeometry()
+        frame.moveCenter(ag.center())
+        self.move(frame.topLeft())
 
     def _build(self) -> None:
         root = QWidget()

@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""Apre pcmanfm-qt quando viene montata una chiavetta/disco.
+
+Usa Gio.VolumeMonitor (stesso meccanismo di gvfs/pcmanfm), non i signal
+UDisks grezzi: più affidabile sulla sessione grafica installata.
+
+- Ignora i mount già presenti al login
+- Ignora /media/quelo-home (montaggio live Quelo dedicato)
+- Su etichetta QUELO-HOME apre .../home se esiste (prepare-usb)
+- Non apre partizioni EFI tipiche
+
+Autostart: xdg + openbox (live e installata).
+Log: /tmp/quelo-automount-open.log
+"""
+from __future__ import annotations
+
+import logging
+import os
+import shutil
+import subprocess
+import sys
+
+try:
+    import gi
+
+    gi.require_version("GLib", "2.0")
+    gi.require_version("Gio", "2.0")
+    from gi.repository import GLib, Gio
+except ImportError:
+    sys.stderr.write("Serve python3-gi (GObject Introspection).\n")
+    sys.exit(1)
+
+LOG_PATH = "/tmp/quelo-automount-open.log"
+LOCK_DIR = "/tmp/quelo-automount-open.lock"
+KNOWN: set[str] = set()
+OPENING: set[str] = set()
+PENDING: set[int] = set()
+
+SKIP_PREFIXES = (
+    "/boot",
+    "/usr",
+    "/var",
+    "/etc",
+    "/media/quelo-home",
+)
+SKIP_LABELS = frozenset(
+    {
+        "efi",
+        "esp",
+        "boot",
+        "uefi",
+        "efi-system",
+        "efi system partition",
+        "system",
+    }
+)
+
+
+def setup_log() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s quelo-automount-open: %(message)s",
+        handlers=[
+            logging.FileHandler(LOG_PATH, encoding="utf-8"),
+            logging.StreamHandler(sys.stderr),
+        ],
+    )
+
+
+LOG = logging.getLogger("quelo-automount-open")
+
+
+def runtime_env() -> dict:
+    e = os.environ.copy()
+    e.setdefault("DISPLAY", ":0")
+    uid = os.getuid()
+    bus_path = f"/run/user/{uid}/bus"
+    if "DBUS_SESSION_BUS_ADDRESS" not in e and os.path.exists(bus_path):
+        e["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={bus_path}"
+    if "XAUTHORITY" not in e:
+        for cand in (
+            os.path.expanduser("~/.Xauthority"),
+            "/root/.Xauthority",
+            "/run/lightdm/root/:0",
+        ):
+            if os.path.exists(cand):
+                e["XAUTHORITY"] = cand
+                break
+    return e
+
+
+def should_skip_path(path: str) -> bool:
+    if not path or path == "/" or not path.startswith("/"):
+        return True
+    if path in ("/home", "/root"):
+        return True
+    for pref in SKIP_PREFIXES:
+        if path == pref or path.startswith(pref + "/"):
+            return True
+    # Solo mount "utente" tipici (udisks/gvfs)
+    if path.startswith("/media/") or path.startswith("/run/media/"):
+        return False
+    # Altri path locali sospetti (bind, ecc.)
+    return True
+
+
+def is_quelo_home_label(label: str) -> bool:
+    u = (label or "").strip().upper()
+    return u == "QUELO-HOME" or u.startswith("QUELO-HOME")
+
+
+def is_efi_label(label: str) -> bool:
+    u = (label or "").strip().lower()
+    if not u:
+        return False
+    if u in SKIP_LABELS or u.startswith("efi"):
+        return True
+    return False
+
+
+def volume_label(mount: Gio.Mount) -> str:
+    try:
+        vol = mount.get_volume()
+        if vol is not None:
+            name = vol.get_name() or ""
+            if name:
+                return name
+    except Exception:
+        pass
+    try:
+        return mount.get_name() or ""
+    except Exception:
+        return ""
+
+
+def resolve_open_path(mount_point: str, label: str) -> str:
+    if is_quelo_home_label(label):
+        home = os.path.join(mount_point, "home")
+        if os.path.isdir(home):
+            return home
+    return mount_point
+
+
+def _clear_opening(path: str) -> bool:
+    OPENING.discard(path)
+    return False
+
+
+def open_folder(path: str) -> None:
+    if path in OPENING:
+        return
+    if not os.path.isdir(path):
+        LOG.info("skip (non dir): %s", path)
+        return
+    fm = shutil.which("pcmanfm-qt") or shutil.which("pcmanfm")
+    if not fm:
+        LOG.warning("pcmanfm-qt non trovato")
+        return
+    OPENING.add(path)
+    LOG.info("apro Gestione file: %s", path)
+    try:
+        subprocess.Popen(
+            [fm, path],
+            env=runtime_env(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    except Exception as exc:
+        LOG.warning("apertura fallita %s: %s", path, exc)
+    GLib.timeout_add_seconds(5, _clear_opening, path)
+
+
+def handle_mount(mount: Gio.Mount, attempt: int = 0) -> bool:
+    """Ritorna True per ritentare (path non ancora pronto)."""
+    try:
+        root = mount.get_root()
+    except Exception:
+        root = None
+    if root is None:
+        return attempt < 20
+
+    path = root.get_path()
+    if not path:
+        return attempt < 20
+
+    if path in KNOWN:
+        return False
+    KNOWN.add(path)
+
+    label = volume_label(mount)
+    if should_skip_path(path):
+        LOG.info("skip path: %s (label=%r)", path, label)
+        return False
+    if is_efi_label(label):
+        LOG.info("skip EFI: %s (label=%r)", path, label)
+        return False
+
+    target = resolve_open_path(path, label)
+    if is_quelo_home_label(label):
+        LOG.info("QUELO-HOME → %s", target)
+    open_folder(target)
+    return False
+
+
+def on_mount_added(_monitor: Gio.VolumeMonitor, mount: Gio.Mount) -> None:
+    mid = id(mount)
+    if mid in PENDING:
+        return
+    PENDING.add(mid)
+    LOG.info("mount-added: %s", mount.get_name())
+
+    state = {"attempt": 0}
+
+    def tick() -> bool:
+        state["attempt"] += 1
+        retry = handle_mount(mount, state["attempt"])
+        if retry:
+            return True
+        PENDING.discard(mid)
+        return False
+
+    # Breve ritardo: dopo automount il path a volte non è subito pronto.
+    GLib.timeout_add(400, tick)
+
+
+def seed_known(monitor: Gio.VolumeMonitor) -> None:
+    for mount in monitor.get_mounts():
+        try:
+            root = mount.get_root()
+            path = root.get_path() if root is not None else None
+        except Exception:
+            path = None
+        if path:
+            KNOWN.add(path)
+    LOG.info("seed: %d mount già noti (niente open al login)", len(KNOWN))
+
+
+def main() -> int:
+    setup_log()
+    try:
+        os.mkdir(LOCK_DIR)
+    except FileExistsError:
+        LOG.info("già in esecuzione, esco")
+        return 0
+
+    # Assicura session bus per VolumeMonitor/gvfs
+    env = runtime_env()
+    os.environ.update(
+        {k: env[k] for k in ("DISPLAY", "XAUTHORITY", "DBUS_SESSION_BUS_ADDRESS") if k in env}
+    )
+
+    try:
+        monitor = Gio.VolumeMonitor.get()
+    except Exception as exc:
+        LOG.error("VolumeMonitor: %s", exc)
+        try:
+            os.rmdir(LOCK_DIR)
+        except OSError:
+            pass
+        return 1
+
+    seed_known(monitor)
+    monitor.connect("mount-added", on_mount_added)
+    LOG.info("in ascolto (Gio.VolumeMonitor → pcmanfm-qt)")
+    try:
+        GLib.MainLoop().run()
+    finally:
+        try:
+            os.rmdir(LOCK_DIR)
+        except OSError:
+            pass
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

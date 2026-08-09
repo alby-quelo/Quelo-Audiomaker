@@ -3,7 +3,7 @@ Quelo Audiomaker — License / Licenza
 
 Copyright (c) 2026 — Alberto Frosio
 
-Elenco terze parti aggiornato alla release 0.08-alpha.
+Elenco terze parti aggiornato alla release 0.12-alpha.
 
 
 ================================================================================
@@ -78,11 +78,16 @@ Sistema base e build
                                         usato anche da quelo-audio-converter
                                         e quelo-palinsesto-radio)
   python3-gi / PyGObject              → LGPL v2.1+ (player GStreamer
-                                        quelo-palinsesto-radio)
+                                        quelo-palinsesto-radio;
+                                        quelo-safe-eject-notify,
+                                        quelo-automount-open)
   sqlite3                             → Public Domain
                                         (anche DB Quelo-palinsesto-radio:
                                         .palinsesto.db)
   tzdata                              → Public Domain
+  udisks2                             → GPL v2+ (automount / etichette USB /
+                                        safe eject)
+  eject                               → GPL v2+
   stress-ng                           → GPL v2+
   squashfs-tools (unsquashfs)         → GPL v2+ (unpackfs Calamares sulla live)
   sudo                                → ISC License (visudo / sudoers)
@@ -148,6 +153,8 @@ Ambiente grafico e desktop
   breeze-icon-theme                   → LGPL v3 / GPL v3
   Qt 6 / qt6-translations-l10n        → LGPL v3 / GPL v2+ / GPL v3
                                         (licenza Qt Company)
+  qml6-module-qtquick* (riepilogo
+  Calamares)                          → LGPL v3 / GPL v2+ / GPL v3
 
 Audio (produzione e riproduzione)
   Mixxx                               → GPL v2+
@@ -336,11 +343,16 @@ Base system and build
                                         also used by quelo-audio-converter
                                         and quelo-palinsesto-radio)
   python3-gi / PyGObject              → LGPL v2.1+ (GStreamer player for
-                                        quelo-palinsesto-radio)
+                                        quelo-palinsesto-radio;
+                                        quelo-safe-eject-notify,
+                                        quelo-automount-open)
   sqlite3                             → Public Domain
                                         (also Quelo-palinsesto-radio DB:
                                         .palinsesto.db)
   tzdata                              → Public Domain
+  udisks2                             → GPL v2+ (automount / USB labels /
+                                        safe eject)
+  eject                               → GPL v2+
   stress-ng                           → GPL v2+
   squashfs-tools (unsquashfs)         → GPL v2+ (Calamares unpackfs on live)
   sudo                                → ISC License (visudo / sudoers)
@@ -406,6 +418,8 @@ Graphical environment and desktop
   breeze-icon-theme                   → LGPL v3 / GPL v3
   Qt 6 / qt6-translations-l10n        → LGPL v3 / GPL v2+ / GPL v3
                                         (Qt Company license)
+  qml6-module-qtquick* (Calamares
+  summary)                            → LGPL v3 / GPL v2+ / GPL v3
 
 Audio (production and playback)
   Mixxx                               → GPL v2+

@@ -1,14 +1,14 @@
 #!/bin/bash
-# Quelo Audiomaker — ricomposizione ISO 0.08-alpha
+# Quelo Audiomaker — ricomposizione ISO 0.12-alpha
 set -euo pipefail
 cd "$(dirname "$0")"
-OUT="Quelo-Audiomaker-0.08-alpha.iso"
+OUT="Quelo-Audiomaker-0.12-alpha.iso"
 PARTS=(
-  Quelo-Audiomaker-0.08-alpha.iso.part00
-  Quelo-Audiomaker-0.08-alpha.iso.part01
+  Quelo-Audiomaker-0.12-alpha.iso.part00
+  Quelo-Audiomaker-0.12-alpha.iso.part01
 )
-SUM="Quelo-Audiomaker-0.08-alpha.iso.sha256"
-echo "Quelo Audiomaker — ricomposizione ISO 0.08-alpha"
+SUM="Quelo-Audiomaker-0.12-alpha.iso.sha256"
+echo "Quelo Audiomaker — ricomposizione ISO 0.12-alpha"
 echo "Cartella: $(pwd)"
 echo
 missing=0

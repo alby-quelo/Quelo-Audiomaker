@@ -197,20 +197,6 @@ run_installed_trust_once() {
   start_desktop
 }
 
-place_mixxx_desktop_icon() {
-  local src="/usr/share/applications/quelo-mixxx.desktop"
-  local desktop_dir dest
-  desktop_dir="$(readlink -f "${DESKTOP_DIR}" 2>/dev/null || true)"
-  [[ -n "${desktop_dir}" ]] || desktop_dir="${DESKTOP_DIR}"
-  dest="${desktop_dir}/quelo-mixxx.desktop"
-  [[ -f "${src}" ]] || { log "SKIP mixxx: manca ${src}"; return 1; }
-  mkdir -p "${desktop_dir}" 2>/dev/null || return 1
-  cp -a "${src}" "${dest}" || return 1
-  chmod a+x "${dest}" 2>/dev/null || true
-  log "mixxx desktop: ${dest}"
-  return 0
-}
-
 # --- main ---
 wait_session || true
 ensure_dbus
@@ -219,29 +205,9 @@ resolve_xauth
 
 if is_live; then
   run_live_trust_cycles
-  # Mixxx DOPO il refresh: altrimenti l'icona sparisce col desktop-off/on.
-  if place_mixxx_desktop_icon; then
-    stop_desktop
-    trust_all_desktop_icons
-    start_desktop
-    sleep 1
-    trust_all_desktop_icons
-  fi
 else
   run_installed_trust_once
-  # Installata: assicurati che Mixxx sia sul Desktop (skel) e fidato.
-  place_mixxx_desktop_icon || true
-  if ! all_desktop_icons_trusted; then
-    stop_desktop
-    trust_all_desktop_icons
-    start_desktop
-  else
-    trust_icon "${DESKTOP_DIR}/quelo-mixxx.desktop" || true
-  fi
 fi
 
-# Cuscinetto dopo l'ultimo refresh, poi marker (il ripristino sessione aspetta questo).
-sleep 1
-touch /tmp/quelo-trust-desktop-icons.done 2>/dev/null || true
-log "completato (done marker)"
+log "completato"
 exit 0

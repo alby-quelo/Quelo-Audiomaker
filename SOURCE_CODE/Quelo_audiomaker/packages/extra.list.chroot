@@ -67,6 +67,13 @@ lxqt-config-l10n
 lxqt-powermanagement
 lxqt-powermanagement-l10n
 upower
+# pcmanfm/gvfs dopo umount chiama `eject /dev/sdX`; senza il pacchetto
+# la notifica quelo-safe-eject-notify non parte.
+eject
+# QasTools (menu CONFIGURAZIONI → SCHEDE AUDIO → quelo-qastools)
+qasmixer
+qashctl
+qasconfig
 x11-utils
 lxrandr
 # Fuso orario (Europe/Rome, vedi hooks/0200-locale.chroot) e sincronizzazione
@@ -320,6 +327,16 @@ audacity
 # sul target dagli script post-install Calamares. Niente SDDM.
 calamares
 calamares-settings-debian
+# notesqml (riepilogo in Calamares) usa Qt6 QML. Con --apt-recommends false
+# non arrivano i Recommends di calamares; su Videomaker i moduli QML6 entrano
+# via Shotcut/SDDM. Qui li forziamo espliciti altrimenti "Caricamento fallito".
+qml6-module-qtquick
+qml6-module-qtquick-controls
+qml6-module-qtquick-layouts
+qml6-module-qtquick-window
+qml6-module-qtqml
+qml6-module-qtqml-models
+qml6-module-qtquick-templates
 lightdm
 lightdm-gtk-greeter
 # Calamares unpackfs: serve unsquashfs sulla live (non è dipendenza hard di calamares

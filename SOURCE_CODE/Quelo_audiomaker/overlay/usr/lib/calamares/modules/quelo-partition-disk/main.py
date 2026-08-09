@@ -90,12 +90,33 @@ def run():
     if not Path(disk).exists():
         return (_("Disco non trovato"), disk)
 
-    try:
-        root_gib = int(float(data.get("rootGiB", "80")))
-    except ValueError:
-        root_gib = 80
     separate = str(data.get("separateHome", "false")).lower() == "true"
     home_fs = data.get("homeFilesystem", "exfat")
+    root_raw = str(data.get("rootGiB", "80")).strip().lower()
+
+    # Sicurezza: unica / (rootGiB: rest) ⇒ MAI HOME/exFAT, anche se il yaml è incoerente.
+    if root_raw in ("rest", "100%", "all", "entire"):
+        separate = False
+        home_fs = "none"
+
+    # Unica / → sempre tutto il disco (ext4). HOME separata → / a rootGiB GiB, HOME = resto.
+    if not separate:
+        root_entire = True
+        root_gib = 0
+        home_fs = "none"
+    else:
+        root_entire = False
+        try:
+            root_gib = int(float(root_raw)) if root_raw not in ("rest", "100%", "all", "entire") else 80
+        except ValueError:
+            root_gib = 80
+        if root_gib < 1:
+            root_gib = 80
+        if home_fs not in ("exfat", "ext4"):
+            return (
+                _("Formato HOME non valido"),
+                _("Scegli exFAT o ext4 nel wizard layout disco."),
+            )
 
     # --- wipe + GPT ---
     _run(["swapoff", "-a"], check=False)
@@ -131,11 +152,14 @@ def run():
         efi_idx = None
 
     root_idx = next_idx
-    cmds += ["-n", f"{root_idx}:0:+{root_gib}G", "-t", f"{root_idx}:8300", "-c", f"{root_idx}:root"]
-    next_idx += 1
-
-    home_idx = None
-    if separate:
+    if root_entire:
+        # Unica / (o rootGiB: rest): fino a fine disco.
+        cmds += ["-n", f"{root_idx}:0:0", "-t", f"{root_idx}:8300", "-c", f"{root_idx}:root"]
+        next_idx += 1
+        home_idx = None
+    else:
+        cmds += ["-n", f"{root_idx}:0:+{root_gib}G", "-t", f"{root_idx}:8300", "-c", f"{root_idx}:root"]
+        next_idx += 1
         home_idx = next_idx
         ptype = "0700" if home_fs == "exfat" else "8300"
         cmds += ["-n", f"{home_idx}:0:0", "-t", f"{home_idx}:{ptype}", "-c", f"{home_idx}:HOME"]
@@ -165,17 +189,34 @@ def run():
         root_dev = _part_node(disk, root_idx)
         if not _wait_node(root_dev):
             return (_("Partizione root non apparsa"), root_dev)
+        # / è SEMPRE ext4 (mai exFAT).
         _run(["mkfs.ext4", "-F", "-L", "root", root_dev], check=True)
 
         home_dev = None
-        if home_idx is not None:
+        if separate:
+            if home_idx is None:
+                return (
+                    _("HOME separata richiesta ma non creata"),
+                    _("Riavvia l'installer e ripeti il wizard layout disco."),
+                )
             home_dev = _part_node(disk, home_idx)
             if not _wait_node(home_dev):
-                return (_("Partizione HOME non apparsa"), home_dev)
+                return (
+                    _("Partizione HOME non apparsa sul disco"),
+                    _(
+                        "Atteso {dev}. Installazione interrotta: nessuna HOME creata."
+                    ).format(dev=home_dev),
+                )
+            # exFAT consentito SOLO sulla partizione HOME separata.
             if home_fs == "exfat":
                 _run(["mkfs.exfat", "-n", "HOME", home_dev], check=True)
             else:
                 _run(["mkfs.ext4", "-F", "-L", "HOME", home_dev], check=True)
+        elif home_idx is not None:
+            return (
+                _("Layout incoerente"),
+                _("Unica / non deve creare HOME. Ripeti il wizard layout disco."),
+            )
     except subprocess.CalledProcessError as exc:
         return (
             _("Formattazione partizione fallita"),
@@ -209,7 +250,7 @@ def run():
         gs.insert("efiSystemPartition", "/boot/efi")
 
     add_part(root_dev, "/", "ext4", "root")
-    if home_idx is not None and home_dev:
+    if separate and home_dev:
         mp = "/media/HOME" if home_fs == "exfat" else "/home"
         # exFAT installata: fmask/dmask 0022 (NON 0000) — file non world-writable
         # (stesso criterio della live QUELO-HOME). uid/gid li rifinisce configure-home.
@@ -234,18 +275,25 @@ def run():
     gs.insert("queloGrubDevice", grub)
     gs.insert("queloSeparateHome", separate)
     gs.insert("queloHomeFilesystem", home_fs if separate else "none")
-    gs.insert("queloRootGiB", root_gib)
-    gs.insert(
-        "queloDiskSummary",
-        f"{disk} · GRUB {grub} · /={root_gib}G"
-        + (f" · HOME {home_fs}" if separate else " · unica /"),
-    )
+    gs.insert("queloRootGiB", "rest" if root_entire else root_gib)
+    if separate:
+        summary = f"{disk} · GRUB {grub} · /={root_gib}G · HOME {home_fs} (resto)"
+    else:
+        summary = f"{disk} · GRUB {grub} · / = tutto il disco"
+    gs.insert("queloDiskSummary", summary)
 
     # filesystem_use hints (best-effort)
     fs_use = {}
     for p in partitions_gs:
         fs_use[p["fs"]] = 2
     gs.insert("filesystem_use", fs_use)
+
+    # Fail-fast: HOME separata deve comparire in GlobalStorage
+    if separate and not any(p.get("partlabel") == "HOME" for p in partitions_gs):
+        return (
+            _("HOME separata non registrata"),
+            _("Il partizionamento non ha prodotto la partizione HOME. Installazione interrotta."),
+        )
 
     libcalamares.utils.debug(f"quelo-partition-disk OK: {gs.value('queloDiskSummary')}")
     return None

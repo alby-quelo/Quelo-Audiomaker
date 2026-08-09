@@ -1,0 +1,3 @@
+#!/bin/bash
+# Avvio da menu Openbox: apre un terminale interattivo.
+exec lxterminal -t "CAMBIO ETICHETTA USB" -e /usr/local/bin/quelo-cambia-nome-usb

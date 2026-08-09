@@ -6,8 +6,8 @@
 
 Inspired by Corrado Guzzanti’s «Quelo» character and derived from **Quelo Office**, it combines the reliability of **Debian GNU/Linux** with a lightweight desktop (**LXQt + Openbox**) and tools for recording, editing, DJ sets, podcasts, streaming and DAW production.
 
-**Release:** **[0.08-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha)**  
-**Full ISO (mirror):** [https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso)  
+**Release:** **[0.12-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.12-alpha)**  
+**Full ISO (mirror):** [https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso)  
 **Website:** [https://alby-quelo.github.io/Quelo-Audiomaker/en/](https://alby-quelo.github.io/Quelo-Audiomaker/en/)  
 **Changelog:** [`CHANGELOG.md`](CHANGELOG.md)
 
@@ -51,13 +51,13 @@ Bundled app (**PALINSESTO RADIO** menu) to schedule and play a weekly radio sche
 - **install** Quelo Audiomaker to disk when you need a fixed system.
 
 
-## What’s new in 0.08-alpha
+## What’s new in 0.12-alpha (since 0.08)
 
 Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 
-- **PALINSESTO RADIO**: LINK, PLAYLIST, ANTI BIANCO, silence-gate, SETTING, timeline zoom, 24:00.
-- Desktop: **MANUALE PALINSESTO** icon also on QUELO-HOME.
-- Openbox menu: **UPPERCASE** labels, **bold** font.
+- Desktop/USB: safe eject, USB label, Power Management, QUELO-HOME automount
+  (exFAT), QasTools, faster desktop start.
+- Calamares: wizards/summary aligned with Videomaker; Qt6 QML fix for failed summary load.
 
 
 ## Main features
@@ -72,8 +72,8 @@ Full detail: [`CHANGELOG.md`](CHANGELOG.md).
 
 ### Installer (Calamares)
 
-- Target disk; `/` only or `/` + HOME; HOME **exFAT** (default) or **ext4**.
-- `/` size: minimum 40 GiB, recommended 80 GiB.
+- Target disk; `/` only (whole disk) or `/` + HOME; HOME **exFAT** (default) or **ext4**.
+- Partition/GRUB summary in Calamares before install.
 
 ### Included applications
 
@@ -126,32 +126,32 @@ After `prepare-usb` (same scheme as Quelo Office / Videomaker):
 
 ### 1. Download the ISO
 
-**Recommended — single file (~2.3 GB):**  
-[https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.08-alpha.iso)
+**Recommended — single file (~2.5 GB):**  
+[https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso](https://click2all.org/iso/Quelo-Audiomaker-0.12-alpha.iso)
 
-**Or from GitHub** (split ISO, 2 GB/file limit) — release **[0.08-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.08-alpha)**:
+**Or from GitHub** (split ISO, 2 GB/file limit) — release **[0.12-alpha](https://github.com/alby-quelo/Quelo-Audiomaker/releases/tag/0.12-alpha)**:
 
-- `Quelo-Audiomaker-0.08-alpha.iso.part00`
-- `Quelo-Audiomaker-0.08-alpha.iso.part01`
-- `Quelo-Audiomaker-0.08-alpha.iso.sha256` (optional)
-- JOIN scripts: [`docs/JOIN-ISO-0.08-alpha.sh`](docs/JOIN-ISO-0.08-alpha.sh) / [`docs/JOIN-ISO-0.08-alpha.bat`](docs/JOIN-ISO-0.08-alpha.bat)  
-  full instructions: [`docs/README-ISO-0.08-alpha.txt`](docs/README-ISO-0.08-alpha.txt)
+- `Quelo-Audiomaker-0.12-alpha.iso.part00`
+- `Quelo-Audiomaker-0.12-alpha.iso.part01`
+- `Quelo-Audiomaker-0.12-alpha.iso.sha256` (optional)
+- JOIN scripts: [`docs/JOIN-ISO-0.12-alpha.sh`](docs/JOIN-ISO-0.12-alpha.sh) / [`docs/JOIN-ISO-0.12-alpha.bat`](docs/JOIN-ISO-0.12-alpha.bat)  
+  full instructions: [`docs/README-ISO-0.12-alpha.txt`](docs/README-ISO-0.12-alpha.txt)
 
 **Join the parts** (in the same folder as the downloaded files):
 
 Windows — Command Prompt:
 
 ```bat
-copy /b Quelo-Audiomaker-0.08-alpha.iso.part00 + Quelo-Audiomaker-0.08-alpha.iso.part01 Quelo-Audiomaker-0.08-alpha.iso
+copy /b Quelo-Audiomaker-0.12-alpha.iso.part00 + Quelo-Audiomaker-0.12-alpha.iso.part01 Quelo-Audiomaker-0.12-alpha.iso
 ```
 
 Linux / macOS:
 
 ```bash
-cat Quelo-Audiomaker-0.08-alpha.iso.part* > Quelo-Audiomaker-0.08-alpha.iso
+cat Quelo-Audiomaker-0.12-alpha.iso.part* > Quelo-Audiomaker-0.12-alpha.iso
 ```
 
-Alternatively: double-click `JOIN-ISO-0.08-alpha.bat` (Windows) or `bash JOIN-ISO-0.08-alpha.sh` (Linux) — details in [`README-ISO-0.08-alpha.txt`](docs/README-ISO-0.08-alpha.txt).
+Alternatively: double-click `JOIN-ISO-0.12-alpha.bat` (Windows) or `bash JOIN-ISO-0.12-alpha.sh` (Linux) — details in [`README-ISO-0.12-alpha.txt`](docs/README-ISO-0.12-alpha.txt).
 
 ### 2. Prepare the USB stick
 
@@ -173,7 +173,7 @@ Host prerequisites (Debian/Ubuntu):
 - [RAR](https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.rar)
 - [TAR](https://github.com/alby-quelo/quelo-office/releases/download/0.71-alpha/Quelo-prepare_usb_windows.tar)
 
-Extract, run the GUI as administrator, choose `Quelo-Audiomaker-0.08-alpha.iso`, confirm with `SI SCRIVI`.
+Extract, run the GUI as administrator, choose `Quelo-Audiomaker-0.12-alpha.iso`, confirm with `SI SCRIVI`.
 
 ### 3. Boot from BIOS/UEFI
 

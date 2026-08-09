@@ -1,11 +1,11 @@
 #!/bin/bash
-# Icona Mixxx sul Desktop — SOLO dopo il refresh trust (altrimenti sparisce).
+# Icona Mixxx sul Desktop (stesso schema di quelo-desktop-install-icon).
+# Il Desktop live viene sostituito da QUELO-HOME (symlink): ripeti finché
+# il Desktop "vero" è quello USB, altrimenti l'icona sparisce.
 set -uo pipefail
 
 SRC="/usr/share/applications/quelo-mixxx.desktop"
 LOG_TAG="quelo-desktop-mixxx-icon"
-TRUST_DONE="/tmp/quelo-trust-desktop-icons.done"
-TRUST_LOCK="/tmp/quelo-trust-desktop-icons.lock"
 
 log() { logger -t "${LOG_TAG}" "$*" 2>/dev/null || true; }
 
@@ -22,30 +22,15 @@ place() {
   if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
     export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
   fi
-  gio set -t string "${dest}" metadata::trust true 2>/dev/null \
-    || gio set "${dest}" metadata::trust true 2>/dev/null \
+  gio set "${dest}" metadata::trust true 2>/dev/null \
+    || gio set -t string "${dest}" "metadata::trust" "true" 2>/dev/null \
     || true
   touch "${dest}" 2>/dev/null || true
   log "placed ${dest}"
   return 0
 }
 
-# Attendi fine del trust (refresh desktop). Non piazzare prima: si perde.
-wait_trust_done() {
-  local end=$((SECONDS + 180))
-  while ((SECONDS < end)); do
-    if [[ -f "${TRUST_DONE}" ]] && [[ ! -d "${TRUST_LOCK}" ]]; then
-      return 0
-    fi
-    sleep 1
-  done
-  log "ATTENZIONE: timeout attesa trust — provo comunque"
-  return 1
-}
-
-wait_trust_done || true
-sleep 2
-
+# Subito (Desktop locale), poi ritenta: mount QUELO-HOME può arrivare dopo.
 place || true
 for _ in $(seq 1 24); do
   sleep 5

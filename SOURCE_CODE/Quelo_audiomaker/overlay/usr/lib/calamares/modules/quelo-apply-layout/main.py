@@ -41,10 +41,14 @@ def run():
     separate = data.get("separateHome", "false").lower() == "true"
     gs.insert("queloSeparateHome", separate)
     gs.insert("queloHomeFilesystem", data.get("homeFilesystem", "none"))
-    try:
-        gs.insert("queloRootGiB", int(data.get("rootGiB", "80")))
-    except ValueError:
-        gs.insert("queloRootGiB", 80)
+    root_raw = str(data.get("rootGiB", "80")).strip().lower()
+    if not separate or root_raw in ("rest", "100%", "all", "entire"):
+        gs.insert("queloRootGiB", "rest")
+    else:
+        try:
+            gs.insert("queloRootGiB", int(float(root_raw)))
+        except ValueError:
+            gs.insert("queloRootGiB", 80)
     gs.insert("queloTargetDevice", data.get("targetDevice", ""))
     gs.insert("queloMinRootGiB", int(data.get("minRootGiB", "40") or 40))
     gs.insert("queloRecommendedRootGiB", int(data.get("recommendedRootGiB", "80") or 80))
@@ -52,11 +56,14 @@ def run():
     # Testo chiaro per eventuali consumer / debug
     if separate:
         org = f"Sistema e HOME separate · HOME {data.get('homeFilesystem', '?')}"
+        root_s = data.get("rootGiB", "?")
     else:
-        org = "Unica partizione /"
+        org = "Unica partizione / (tutto il disco)"
+        root_s = "rest"
     gs.insert(
         "queloDiskSummary",
-        f"{data.get('targetDevice', '?')} · {org} · / = {data.get('rootGiB', '?')} GiB",
+        f"{data.get('targetDevice', '?')} · {org} · / = {root_s}"
+        + (" GiB" if separate else ""),
     )
     libcalamares.utils.debug(f"quelo-apply-layout: {gs.value('queloDiskSummary')}")
     return None

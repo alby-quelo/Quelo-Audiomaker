@@ -3,9 +3,13 @@
 """Wizard layout disco Quelo (UX freeze schermata 4).
 
 Scrive:
-  /etc/calamares/modules/partition.conf  (partitionLayout)
-  /etc/quelo-install-choices.yaml
+  /etc/quelo-install-choices.yaml          ← fonte unica per quelo-partition-disk
   /etc/calamares/quelo-install-choices.yaml
+  /etc/calamares/modules/partition.conf    ← solo metadati EFI/swap (niente layout)
+
+Layout:
+  - unica /     → rootGiB: rest (tutto il disco dopo EFI)
+  - / + HOME    → rootGiB numerico; HOME = resto (exFAT→/media/HOME, ext4→/home)
 
 Exit 0 = OK (Avanti), 1 = Annulla/errore.
 """
@@ -104,13 +108,32 @@ def _option_block(radio: QRadioButton, note_text: str) -> QWidget:
     """Radio + nota indentata sotto, con spazio sotto: niente sovrapposizioni."""
     block = QWidget()
     v = QVBoxLayout(block)
-    v.setContentsMargins(0, 0, 0, 14)
-    v.setSpacing(6)
+    v.setContentsMargins(0, 0, 0, 8)
+    v.setSpacing(4)
     v.addWidget(radio)
     note = _desc_label(note_text)
     note.setContentsMargins(28, 0, 8, 0)
     v.addWidget(note)
     return block
+
+
+def _fit_window_to_screen(win: QMainWindow, prefer_w: int = 720, prefer_h: int = 560) -> None:
+    """Ridimensiona entro lo schermo disponibile: i bottoni restano raggiungibili."""
+    screen = win.screen() or QApplication.primaryScreen()
+    if screen is None:
+        win.resize(prefer_w, prefer_h)
+        return
+    ag = screen.availableGeometry()
+    # Margine per pannelli LXQt / decorazioni finestra.
+    max_w = max(560, ag.width() - 32)
+    max_h = max(400, ag.height() - 32)
+    w = min(prefer_w, max_w)
+    h = min(prefer_h, max_h)
+    win.setMinimumSize(min(600, max_w), min(360, max_h))
+    win.resize(w, h)
+    frame = win.frameGeometry()
+    frame.moveCenter(ag.center())
+    win.move(frame.topLeft())
 
 
 def load_sizes() -> dict:
@@ -179,15 +202,27 @@ def list_disks() -> list[dict]:
 
 
 def write_choices(choices: dict) -> None:
+    root_v = choices["rootGiB"]
+    if root_v is None or root_v == "rest":
+        root_line = "rootGiB: rest"
+    else:
+        root_line = f"rootGiB: {root_v}"
+    home_v = choices["homeGiB"]
+    home_line = (
+        "homeGiB: rest"
+        if home_v is None or home_v == "rest"
+        else f"homeGiB: {home_v}"
+    )
     lines = [
         "# Scelte wizard layout disco Quelo (generato automaticamente)",
+        "# Fonte unica per quelo-partition-disk (partition.conf NON guida il layout).",
         "---",
         f"targetDevice: \"{choices['targetDevice']}\"",
         f"targetLabel: \"{choices.get('targetLabel', choices['targetDevice'])}\"",
         f"separateHome: {str(choices['separateHome']).lower()}",
         f"homeFilesystem: \"{choices['homeFilesystem']}\"",
-        f"rootGiB: {choices['rootGiB']}",
-        f"homeGiB: {choices['homeGiB'] if choices['homeGiB'] is not None else 'rest'}",
+        root_line,
+        home_line,
         f"minRootGiB: {choices['minRootGiB']}",
         f"recommendedRootGiB: {choices['recommendedRootGiB']}",
     ]
@@ -197,37 +232,15 @@ def write_choices(choices: dict) -> None:
         path.write_text(text, encoding="utf-8")
 
 
-def write_partition_conf(choices: dict) -> None:
-    """Riscrive partitionLayout in partition.conf mantenendo l'intestazione fissa."""
-    root_gib = int(choices["rootGiB"])
-    separate = choices["separateHome"]
-    home_fs = choices["homeFilesystem"]
+def write_partition_conf(_choices: dict) -> None:
+    """Aggiorna solo metadati EFI/swap in partition.conf.
 
-    layout_lines = [
-        "partitionLayout:",
-        "    - name: \"root\"",
-        "      filesystem: \"ext4\"",
-        "      mountPoint: \"/\"",
-        f"      size: {root_gib}G",
-        f"      minSize: {choices['minRootGiB']}G",
-    ]
-    if separate:
-        if home_fs == "exfat":
-            layout_lines += [
-                "    - name: \"HOME\"",
-                "      filesystem: \"exfat\"",
-                "      mountPoint: \"/media/HOME\"",
-                "      size: 100%",
-            ]
-        else:
-            layout_lines += [
-                "    - name: \"HOME\"",
-                "      filesystem: \"ext4\"",
-                "      mountPoint: \"/home\"",
-                "      size: 100%",
-            ]
-
-    header = """# partition.conf Quelo — generato da quelo-calamares-disk-layout
+    Il layout reale (/, HOME) lo decide quelo-partition-disk da
+    quelo-install-choices.yaml — niente partitionLayout qui (evita doppia verità).
+    """
+    text = """# partition.conf Quelo — metadati EFI/swap.
+# Layout partizioni: NON usato in exec. Fonte unica:
+#   /etc/quelo-install-choices.yaml  →  modulo quelo-partition-disk
 ---
 efi:
     mountPoint:         "/boot/efi"
@@ -248,11 +261,9 @@ allowManualPartitioning: false
 initialPartitioningChoice: erase
 defaultFileSystemType: "ext4"
 essentialMounts: [ "live-*", "control", "ventoy" ]
-
 """
     PARTITION_CONF.parent.mkdir(parents=True, exist_ok=True)
-    PARTITION_CONF.write_text(header + "\n".join(layout_lines) + "\n", encoding="utf-8")
-
+    PARTITION_CONF.write_text(text, encoding="utf-8")
 
 class DiskLayoutWindow(QMainWindow):
     def __init__(self) -> None:
@@ -260,7 +271,7 @@ class DiskLayoutWindow(QMainWindow):
         self.sizes = load_sizes()
         self.disks = list_disks()
         self.setWindowTitle("Quelo Audiomaker — Organizzazione disco")
-        self.setMinimumSize(720, 640)
+        self.setMinimumSize(600, 360)
         for logo in LOGO_CANDIDATES:
             if logo.is_file():
                 self.setWindowIcon(QIcon(str(logo)))
@@ -277,9 +288,10 @@ class DiskLayoutWindow(QMainWindow):
             if w.width() >= 120:
                 w._apply_height(w.width())
                 w.updateGeometry()
-        # Finestra abbastanza alta da non sovrapporre i blocchi.
-        hint = self.sizeHint()
-        self.resize(max(self.width(), hint.width()), max(self.height(), hint.height(), 780))
+        # NON espandere alla height del sizeHint (su schermi bassi i bottoni
+        # finirebbero fuori desktop). Il contenuto sta nello scroll; i bottoni
+        # restano fissi in basso, entro l'area disponibile.
+        _fit_window_to_screen(self, prefer_w=720, prefer_h=560)
 
     def _build(self) -> None:
         shell = QWidget()
@@ -293,8 +305,8 @@ class DiskLayoutWindow(QMainWindow):
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         content = QWidget()
         layout = QVBoxLayout(content)
-        layout.setSpacing(14)
-        layout.setContentsMargins(18, 18, 18, 12)
+        layout.setSpacing(10)
+        layout.setContentsMargins(14, 12, 14, 8)
 
         head = QHBoxLayout()
         logo_lbl = QLabel()
@@ -340,7 +352,7 @@ class DiskLayoutWindow(QMainWindow):
         lv = QVBoxLayout(layout_box)
         lv.setSpacing(2)
         lv.setContentsMargins(10, 14, 10, 6)
-        self.radio_single = QRadioButton("Tutto in una partizione (/)")
+        self.radio_single = QRadioButton("Tutto in una partizione (/) — sempre ext4")
         self.radio_separate = QRadioButton(
             "Sistema e HOME separate (/ + HOME) — consigliato"
         )
@@ -351,13 +363,15 @@ class DiskLayoutWindow(QMainWindow):
         lv.addWidget(
             _option_block(
                 self.radio_single,
-                "Più semplice. Sistema e file insieme; meno pratico per aggiornamenti futuri.",
+                "La partizione di sistema (/) usa tutto il disco (dopo EFI) ed è "
+                "sempre ext4 (Linux). Nessun exFAT in questa modalità.",
             )
         )
         lv.addWidget(
             _option_block(
                 self.radio_separate,
-                "Puoi reinstallare il sistema senza perdere i file in HOME.",
+                "Puoi reinstallare il sistema senza perdere i file in HOME. "
+                "Solo qui puoi scegliere exFAT o ext4 per HOME.",
             )
         )
         layout.addWidget(layout_box)
@@ -388,9 +402,9 @@ class DiskLayoutWindow(QMainWindow):
         )
         layout.addWidget(self.home_box)
 
-        # Sizes
-        size_box = QGroupBox("Dimensioni")
-        form = QFormLayout(size_box)
+        # Sizes — solo con HOME separata; unica / = tutto il disco (niente spin).
+        self.size_box = QGroupBox("Dimensioni")
+        form = QFormLayout(self.size_box)
         form.setVerticalSpacing(8)
         self.root_spin = QSpinBox()
         self.root_spin.setRange(1, 100000)
@@ -402,13 +416,18 @@ class DiskLayoutWindow(QMainWindow):
         self.home_spin.setSpecialValueText("resto del disco")
         self.home_spin.setValue(0)
         self.home_spin.setSuffix(" GiB")
+        self.home_spin.setEnabled(False)
         form.addRow("Partizione HOME:", self.home_spin)
-        self.size_hint = _desc_label(
-            f"Consigliati {self.sizes['recommendedRootGiB']} GiB per /. "
-            f"Minimo {self.sizes['minRootGiB']} GiB."
-        )
+        self.size_hint = _desc_label("")
         form.addRow(self.size_hint)
-        layout.addWidget(size_box)
+        layout.addWidget(self.size_box)
+
+        self.single_size_lbl = _desc_label(
+            "La partizione di sistema (/) userà tutto lo spazio disponibile sul disco "
+            "(dopo la piccola partizione EFI o bios-grub), formattata in ext4. "
+            "exFAT non è disponibile in questa modalità (serve solo per HOME separata)."
+        )
+        layout.addWidget(self.single_size_lbl)
 
         self.error_lbl = _desc_label("", extra_css="color: #b00020; font-weight: bold;")
         layout.addWidget(self.error_lbl)
@@ -437,26 +456,46 @@ class DiskLayoutWindow(QMainWindow):
     def _sync_ui(self) -> None:
         sep = self.radio_separate.isChecked()
         self.home_box.setVisible(sep)
-        self.home_spin.setEnabled(sep)
+        self.size_box.setVisible(sep)
+        self.single_size_lbl.setVisible(not sep)
+        if sep:
+            min_home = self.sizes["minHomeGiB"]
+            self.size_hint.setText(
+                f"Consigliati {self.sizes['recommendedRootGiB']} GiB per / "
+                f"(minimo {self.sizes['minRootGiB']} GiB). "
+                f"HOME prende il resto del disco (minimo circa {min_home} GiB). "
+                "exFAT → montata in /media/HOME; ext4 → /home."
+            )
+            if isinstance(self.size_hint, _DescLabel) and self.size_hint.width() >= 120:
+                self.size_hint._apply_height(self.size_hint.width())
         self._validate()
 
     def _validate(self) -> bool:
         ok = True
         msgs = []
         min_root = self.sizes["minRootGiB"]
+        min_home = self.sizes["minHomeGiB"]
         root_gib = self.root_spin.value()
         disk = self.disk_combo.currentData()
+        separate = self.radio_separate.isChecked()
         if disk is None:
             ok = False
             msgs.append("Seleziona un disco di destinazione.")
-        elif root_gib < min_root:
-            ok = False
-            msgs.append(
-                f"La partizione di sistema non può essere inferiore a {min_root} GiB."
-            )
-        elif disk and root_gib >= disk["size_gib"] - 1:
-            ok = False
-            msgs.append("La partizione / lascia troppo poco spazio sul disco.")
+        elif separate:
+            if root_gib < min_root:
+                ok = False
+                msgs.append(
+                    f"La partizione di sistema non può essere inferiore a {min_root} GiB."
+                )
+            elif disk and (root_gib + 1 + min_home) > disk["size_gib"]:
+                # ~1 GiB per EFI/bios-grub + minimo HOME
+                ok = False
+                msgs.append(
+                    f"Su questo disco non resta abbastanza spazio per HOME "
+                    f"(servono almeno ~{min_home} GiB oltre / e EFI). "
+                    f"Riduci la dimensione di /."
+                )
+        # unica /: nessun vincolo sui GiB (usa tutto il disco)
         self.error_lbl.setText("\n".join(msgs))
         self.btn_next.setEnabled(ok)
         return ok
@@ -469,16 +508,25 @@ class DiskLayoutWindow(QMainWindow):
         if not self._validate():
             return
         disk = self.disk_combo.currentData()
-        separate = self.radio_separate.isChecked()
-        home_fs = "exfat" if self.radio_exfat.isChecked() else "ext4"
-        home_gib = self.home_spin.value()
+        # Fonte unica: radio layout (non lo stato nascosto di exFAT).
+        separate = self.radio_separate.isChecked() and not self.radio_single.isChecked()
+        if separate:
+            home_fs = "exfat" if self.radio_exfat.isChecked() else "ext4"
+            root_gib: int | str = self.root_spin.value()
+            home_gib = None  # resto del disco
+        else:
+            # Unica /: forzature anti-incoerenza (niente HOME, niente exFAT).
+            home_fs = "none"
+            root_gib = "rest"
+            home_gib = None
+            separate = False
         choices = {
             "targetDevice": disk["path"],
             "targetLabel": disk["label"],
             "separateHome": separate,
             "homeFilesystem": home_fs if separate else "none",
-            "rootGiB": self.root_spin.value(),
-            "homeGiB": None if home_gib == 0 else home_gib,
+            "rootGiB": root_gib,
+            "homeGiB": home_gib,
             "minRootGiB": self.sizes["minRootGiB"],
             "recommendedRootGiB": self.sizes["recommendedRootGiB"],
         }

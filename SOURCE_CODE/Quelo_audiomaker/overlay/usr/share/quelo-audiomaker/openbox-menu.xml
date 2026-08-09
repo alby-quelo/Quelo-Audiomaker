@@ -74,11 +74,17 @@
       <item label="SCHERMO">
         <action name="Execute"><execute>quelo-lxrandr</execute></action>
       </item>
+      <item label="POWER MANAGEMENT">
+        <action name="Execute"><execute>lxqt-config-powermanagement</execute></action>
+      </item>
       <item label="STAMPANTI">
         <action name="Execute"><execute>sh -c 'quelo-firefox http://localhost:631'</execute></action>
       </item>
       <item label="VOLUME">
         <action name="Execute"><execute>pavucontrol</execute></action>
+      </item>
+      <item label="SCHEDE AUDIO">
+        <action name="Execute"><execute>quelo-qastools</execute></action>
       </item>
       <item label="SCHEDA FOCUSRITE SCARLETT/CLARETT">
         <action name="Execute"><execute>alsa-scarlett-gui</execute></action>
@@ -94,6 +100,9 @@
       </item>
       <item label="MIXER SCHEDA ICE1712 (ENVY24)">
         <action name="Execute"><execute>envy24control</execute></action>
+      </item>
+      <item label="CAMBIO ETICHETTA USB">
+        <action name="Execute"><execute>quelo-cambia-nome-usb-gui</execute></action>
       </item>
       <item label="INSTALLA QUELO AUDIOMAKER SUL PC">
         <action name="Execute"><execute>quelo-install</execute></action>

@@ -20,6 +20,18 @@ run systemctl disable quelo-usb-mount-persist.service 2>/dev/null || true
 run systemctl mask quelo-usb-mount-home.service 2>/dev/null || true
 run systemctl mask quelo-usb-mount-persist.service 2>/dev/null || true
 
+# Stesse regole della live: QUELO-HOME visibile; persistence + ISO nascosti.
+UDEV_RULES="${ROOT}/etc/udev/rules.d/99-quelo-ignore-managed-partitions.rules"
+log "udev: QUELO-HOME visibile; nascosti persistence e volumi ISO"
+cat > "${UDEV_RULES}" <<'EOF'
+# Quelo Audiomaker — regole udisks (sistema installato)
+# QUELO-HOME: VISIBILE. persistence + volumi ISO: nascosti.
+SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="persistence", ENV{UDISKS_IGNORE}="1"
+SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="QUELO-AUDIOMAKER*", ENV{UDISKS_IGNORE}="1"
+SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="QUELO-VIDEOMAKER*", ENV{UDISKS_IGNORE}="1"
+SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="QUELO-OFFICE*", ENV{UDISKS_IGNORE}="1"
+EOF
+
 # Solo ripristino sessione live: sull'installata non serve.
 # Trust icone Desktop (badge !): DEVE restare anche sull'installata
 # (HOME.desktop sta su ~/Desktop ext4; fmask di /media/HOME non basta).

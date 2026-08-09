@@ -3,6 +3,28 @@
 Changelog della distro **Quelo Audiomaker** (progetto distinto da Quelo Videomaker / Quelo Office).
 
 
+## [0.12-alpha] — 2026-08-09
+
+Rispetto a **0.08-alpha** (unica release pubblica precedente):
+
+### Desktop / USB
+- **Safe eject notify** + pacchetto **`eject`**; **CAMBIO ETICHETTA USB**;
+  **POWER MANAGEMENT** in CONFIGURAZIONI.
+- **Automount ON** + apre Gestione file (`quelo-automount-open`).
+- **QUELO-HOME** (exFAT) **visibile** a udisks; nascosti `persistence` e volumi
+  ISO `QUELO-AUDIOMAKER*` / `VIDEOMAKER*` / `OFFICE*` (niente montaggio squashfs
+  al posto dell’exFAT).
+- Mount QUELO-HOME: `fmask/dmask=0022`; MIME audio/playlist → **Audacious**.
+- **SCHEDE AUDIO** (QasTools) in CONFIGURAZIONI.
+- Avvio live più snello (icone/trust come Videomaker); audio in **background**
+  in `.xinitrc` + timeout `alsactl` (meno schermo nero senza mouse).
+
+### Installer Calamares
+- Wizard allineati a Videomaker (finestre nello schermo, GRUB, riepilogo);
+  partizionamento Quelo (`rootGiB: rest` se `/` unico).
+- Pagina **Riepilogo**: moduli **Qt6 QML** espliciti (fix «Caricamento fallito»).
+
+
 ## [0.08-alpha] — 2026-08-03
 
 - **Quelo-palinsesto-radio** (evoluzione rispetto a 0.03):

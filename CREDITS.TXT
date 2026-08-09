@@ -5,10 +5,11 @@ Progetto: Quelo Audiomaker (quelo-audiomaker)
 
 Derivato dal lavoro di base Quelo Office (stesso autore), con focus audio/produzione.
 
-Elenco aggiornato alla release 0.08-alpha
+Elenco aggiornato verso 0.12-alpha
 (DAW Ardour/REAPER, codec, plugin, Mixxx, BUTT, MediaInfo,
  quelo-audio-converter, quelo-palinsesto-radio — LINK/PLAYLIST/ANTI BIANCO,
- manuale Desktop, interfacce audio, Calamares).
+ manuale Desktop, interfacce audio, Calamares + Qt6 QML notesqml, QasTools,
+ safe eject, CAMBIO ETICHETTA USB, automount QUELO-HOME → Gestione file).
 
 
 ================================================================================
@@ -51,6 +52,7 @@ Installer su disco e display manager
   GRUB / Debian | grub-pc (BIOS legacy, pool ISO) | https://www.gnu.org/software/grub/
   efibootmgr contributors | efibootmgr | https://github.com/rhboot/efibootmgr
   Qt Project | qt6-l10n-tools (solo build traduzioni Calamares IT) | https://www.qt.io/
+  Qt Project | qml6-module-qtquick* (pagina Riepilogo Calamares) | https://www.qt.io/
 
 prepare-usb GUI Windows (host 32/64 bit)
   Python Software Foundation | Python 3.9.13 Win32 (pacchetto offline) | https://www.python.org/
@@ -78,11 +80,13 @@ Desktop e ambiente grafico
   LXQt team | pcmanfm-qt, libfm-qt | https://lxqt-project.org/
   LXQt team | lximage-qt | https://lxqt-project.org/
   GNOME / freedesktop.org | gvfs | https://wiki.gnome.org/Projects/gvfs
+  freedesktop.org | UDisks2 (automount / etichette USB / safe eject) | https://www.freedesktop.org/wiki/Software/udisks/
+  util-linux / Debian | eject | https://www.kernel.org/pub/linux/utils/util-linux/
   freedesktop.org | UPower (upower) | https://upower.freedesktop.org/
   KDE community | breeze-icon-theme | https://community.kde.org/Breeze
   Qt Company | Qt 6 | https://www.qt.io/
   Riverbank Computing | PyQt6 (wizard Calamares Quelo, quelo-audio-converter, quelo-palinsesto-radio) | https://www.riverbankcomputing.com/software/pyqt/
-  PyGObject / GNOME | python3-gi (player GStreamer Quelo-palinsesto-radio) | https://pygobject.gnome.org/
+  PyGObject / GNOME | python3-gi (palinsesto, safe-eject, automount-open) | https://pygobject.gnome.org/
   freedesktop.org | xdotool | https://www.semicomplete.com/projects/xdotool/
   freedesktop.org | x11-utils | https://www.freedesktop.org/
 
@@ -93,6 +97,7 @@ Memoria (ZRAM) e test
 Audio (produzione)
   Audacity Team | Audacity | https://www.audacityteam.org/
   Audacious development team | Audacious | https://audacious-media-player.org/
+  Sebastian Holtermann | QasTools (qasmixer, qashctl, qasconfig) | https://gitlab.com/sebholt/qastools
   Mixxx DJ Software | Mixxx | https://mixxx.org/
   Daniel Nöthen | BUTT (Broadcast Using This Tool, AppImage upstream) | https://danielnoethen.de/butt/
   MediaArea.net | MediaInfo / mediainfo-gui | https://mediaarea.net/MediaInfo
@@ -231,6 +236,7 @@ Installer and display manager
   GRUB / Debian | grub-pc (legacy BIOS, ISO pool) | https://www.gnu.org/software/grub/
   efibootmgr contributors | efibootmgr | https://github.com/rhboot/efibootmgr
   Qt Project | qt6-l10n-tools (build-only for Calamares IT translations) | https://www.qt.io/
+  Qt Project | qml6-module-qtquick* (Calamares summary page) | https://www.qt.io/
 
 prepare-usb GUI Windows (32/64-bit host)
   Python Software Foundation | Python 3.9.13 Win32 (offline package) | https://www.python.org/
@@ -258,11 +264,13 @@ Desktop and graphical environment
   LXQt team | pcmanfm-qt, libfm-qt | https://lxqt-project.org/
   LXQt team | lximage-qt | https://lxqt-project.org/
   GNOME / freedesktop.org | gvfs | https://wiki.gnome.org/Projects/gvfs
+  freedesktop.org | UDisks2 (automount / USB labels / safe eject) | https://www.freedesktop.org/wiki/Software/udisks/
+  util-linux / Debian | eject | https://www.kernel.org/pub/linux/utils/util-linux/
   freedesktop.org | UPower (upower) | https://upower.freedesktop.org/
   KDE community | breeze-icon-theme | https://community.kde.org/Breeze
   Qt Company | Qt 6 | https://www.qt.io/
   Riverbank Computing | PyQt6 (Quelo Calamares wizards, quelo-audio-converter, quelo-palinsesto-radio) | https://www.riverbankcomputing.com/software/pyqt/
-  PyGObject / GNOME | python3-gi (GStreamer player for Quelo-palinsesto-radio) | https://pygobject.gnome.org/
+  PyGObject / GNOME | python3-gi (palinsesto, safe-eject, automount-open) | https://pygobject.gnome.org/
   freedesktop.org | xdotool | https://www.semicomplete.com/projects/xdotool/
   freedesktop.org | x11-utils | https://www.freedesktop.org/
 
@@ -273,6 +281,7 @@ Memory (ZRAM) and testing
 Audio (production)
   Audacity Team | Audacity | https://www.audacityteam.org/
   Audacious development team | Audacious | https://audacious-media-player.org/
+  Sebastian Holtermann | QasTools (qasmixer, qashctl, qasconfig) | https://gitlab.com/sebholt/qastools
   Mixxx DJ Software | Mixxx | https://mixxx.org/
   Daniel Nöthen | BUTT (Broadcast Using This Tool, AppImage upstream) | https://danielnoethen.de/butt/
   MediaArea.net | MediaInfo / mediainfo-gui | https://mediaarea.net/MediaInfo

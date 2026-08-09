@@ -15,7 +15,13 @@ set -uo pipefail
 TARGET_VOL="60%"
 
 quelo_audio_default_alsa() {
-  alsactl init >/dev/null 2>&1 || true
+  # Timeout: con molte schede/firmware (SOF, Scarlett, FFADO, …) alsactl init
+  # può restare in attesa hardware per decine di secondi senza I/O su USB.
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 4 alsactl init >/dev/null 2>&1 || true
+  else
+    alsactl init >/dev/null 2>&1 || true
+  fi
 
   if ! command -v amixer >/dev/null 2>&1; then
     return 0
