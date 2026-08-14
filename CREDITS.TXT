@@ -5,7 +5,7 @@ Progetto: Quelo Audiomaker (quelo-audiomaker)
 
 Derivato dal lavoro di base Quelo Office (stesso autore), con focus audio/produzione.
 
-Elenco aggiornato verso 0.12-alpha
+Elenco aggiornato verso 0.13-alpha
 (DAW Ardour/REAPER, codec, plugin, Mixxx, BUTT, MediaInfo,
  quelo-audio-converter, quelo-palinsesto-radio — LINK/PLAYLIST/ANTI BIANCO,
  manuale Desktop, interfacce audio, Calamares + Qt6 QML notesqml, QasTools,

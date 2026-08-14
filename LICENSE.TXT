@@ -3,7 +3,7 @@ Quelo Audiomaker — License / Licenza
 
 Copyright (c) 2026 — Alberto Frosio
 
-Elenco terze parti aggiornato alla release 0.12-alpha.
+Elenco terze parti aggiornato alla release 0.13-alpha.
 
 
 ================================================================================

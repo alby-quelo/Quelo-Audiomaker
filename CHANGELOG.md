@@ -3,6 +3,12 @@
 Changelog della distro **Quelo Audiomaker** (progetto distinto da Quelo Videomaker / Quelo Office).
 
 
+## [0.13-alpha] — 2026-08-14
+
+### Pannello LXQt (live e installata)
+- Widget spazio Home (`quelo-status-home`): QUELO-HOME live → `/media/HOME` (exFAT installata) → `/home` separata → altrimenti `/`. Così la riga Home compare anche sul sistema installato.
+
+
 ## [0.12-alpha] — 2026-08-09
 
 Rispetto a **0.08-alpha** (unica release pubblica precedente):

@@ -1,7 +1,29 @@
 #!/bin/bash
-# Stato spazio QUELO-HOME per il pannello LXQt.
+# Stato spazio "Home"/dati per il pannello LXQt (live e installata).
+# Ordine: QUELO-HOME live → HOME exFAT installata → /home separata → /.
 set -euo pipefail
 
-df -h /media/quelo-home 2>/dev/null | awk 'NR==2{
+target=""
+for cand in /media/quelo-home /media/HOME /home /; do
+  if mountpoint -q "${cand}" 2>/dev/null; then
+    # /home solo se è una partizione distinta da / (HOME ext4 separata).
+    if [[ "${cand}" == /home ]]; then
+      home_src="$(findmnt -n -o SOURCE --target /home 2>/dev/null || true)"
+      root_src="$(findmnt -n -o SOURCE --target / 2>/dev/null || true)"
+      if [[ -z "${home_src}" || "${home_src}" == "${root_src}" ]]; then
+        continue
+      fi
+    fi
+    target="${cand}"
+    break
+  fi
+done
+
+# Fallback: / esiste sempre come mountpoint; se il loop non ha preso niente.
+if [[ -z "${target}" ]]; then
+  target="/"
+fi
+
+df -h "${target}" 2>/dev/null | awk 'NR==2{
   printf "Home usata %s / libera %s / totale %s", $3, $4, $2
 }' || true
